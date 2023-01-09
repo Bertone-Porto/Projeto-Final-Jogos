@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -33,7 +34,7 @@ int main (int argc, char* args[])
 	SDL_Texture* sprite = IMG_LoadTexture(ren, "pac-man-sprite.png");
     
     assert(maze != NULL);
-
+	assert(sprite != NULL);
 
     /* EXECUÇÃO */
     bool continua = true;
@@ -47,13 +48,17 @@ int main (int argc, char* args[])
     bool ready = false;
     
     
-    SDL_Rect r_personagem = {200, 50, 40, 40};
+    SDL_Rect r_personagem = {470, 360, 50, 50};
     SDL_Rect c_personagem;
     
     SDL_Rect r_maze = { 150,100, 700,700 };
     SDL_Rect c_maze;
     
+    //roundedBoxRGBA(ren, 200, 200, 800, 800, 20, 250,250,250,0);
+
+    
     while (continua) {
+    	
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
    		SDL_RenderClear(ren);
         
@@ -73,48 +78,62 @@ int main (int argc, char* args[])
 		        if (evt.type == SDL_KEYDOWN) {
 		        	switch (evt.key.keysym.sym) {
 		                case SDLK_UP:
-				            if((r_personagem.y-5) != 0){
+				            if(r_personagem.y-5 > 150){
 								r_personagem.y -= 5;
 								para_cima = true;
 								movimento = 1;
 								ready = true;
 								boca++;
-								if(boca > 3){
-									boca =0;
+								if(boca % 2 == 0){
+									x=0; y=40;
+								} else{
+									x=40; y=0;
 								}
-
+								if(boca > 11){
+									boca=0;
+								}
 							}
 							break;
 								   
 						case SDLK_DOWN:
-							if((r_personagem.y + 5) != 700){
+							if(r_personagem.y < 700){
 								r_personagem.y += 5;
 								para_baixo = true;
 								movimento = 2;
 								ready = true;
 								boca++;
-								if(boca > 3){
-									boca =0;
+								if(boca % 2 == 0){
+									x=0; y=60;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
 								}
 							}
 
 							break;
 							
 						case SDLK_LEFT:
-							if((r_personagem.x-5) != 0 ){
+							if(r_personagem.x > 150 ){
 								r_personagem.x -= 5;
 								para_esquerda = true;
 								movimento = 3;
 								ready = true;
 								boca++;
-								if(boca > 3){
-									boca =0;
+								if(boca % 2 == 0){
+									x=0; y=0;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
 								}
 							}
 							break;
 								   
 						case SDLK_RIGHT:
-							if((r_personagem.x+5) != 970 ) {
+							if(r_personagem.x < 785) {
 								r_personagem.x += 5;
 								para_direita = true;
 								movimento = 4;
@@ -138,13 +157,13 @@ int main (int argc, char* args[])
 			
 			switch(movimento){
 				case 1: //para cima
-					c_personagem = (SDL_Rect) {0, 40, 20, 20}; 
+					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
 				case 2: //para baixo
-					c_personagem = (SDL_Rect) {0, 60, 20, 20}; 
+					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
 				case 3: //para esquerda
-					c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
+					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
 				case 4: //para direita
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
@@ -159,13 +178,34 @@ int main (int argc, char* args[])
 			c_maze = (SDL_Rect) {   0, 0, 448,576 }; //labirinto
 			SDL_RenderCopy(ren, maze, &c_maze, &r_maze);
 			
+			/*SDL_SetRenderDrawColor(ren,250,250,250,0);
+			SDL_RenderDrawLine(ren,100,167,900,167); //limite topo
+			SDL_RenderDrawLine(ren,162,140,162,800); //limite lado esquerdo
+			SDL_RenderDrawLine(ren,839,140,839,800); //limite lado direito
+			SDL_RenderDrawLine(ren,100,752,900,752); //limite parte de baixo*/
+			
+			SDL_SetRenderDrawColor(ren,250,250,250,10);//branco
+			SDL_Rect cubos = {165,170, 20,20};
+			SDL_RenderFillRect(ren, &cubos);
+			
+			SDL_SetRenderDrawColor(ren,250,0,0,10);//vermelho
+			SDL_Rect cubos2 = {215,170, 20, 20};
+			SDL_RenderFillRect(ren, &cubos2);
+			
+			SDL_SetRenderDrawColor(ren,0,250,0,10);//verde
+			SDL_Rect cubos3 = {165,200, 20,20};
+			SDL_RenderFillRect(ren, &cubos3);
+			
+			SDL_SetRenderDrawColor(ren,100,100,100,10);//cinza
+			SDL_Rect cubos4 = {215,200, 20, 20};
+			SDL_RenderFillRect(ren, &cubos4);
+			
+			
+			
+			
 			SDL_RenderPresent(ren);
 
 			espera = 150;
-
-			/*if(isup > 1){
-				isup = 1;
-			}*/
 			
 		}
     }
