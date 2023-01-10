@@ -1,3 +1,4 @@
+/*gcc teste.c -lSDL2 -lSDL2_gfx -lSDL2_image -o teste*/
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
