@@ -28,10 +28,10 @@ int main (int argc, char* args[])
     SDL_Window* win = SDL_CreateWindow("Animação",
                          SDL_WINDOWPOS_UNDEFINED,
                          SDL_WINDOWPOS_UNDEFINED,
-                         1000, 900, SDL_WINDOW_SHOWN
+                         500, 500, SDL_WINDOW_SHOWN
                       );
     SDL_Renderer* ren = SDL_CreateRenderer(win, -1, 0);
-    SDL_Texture* maze = IMG_LoadTexture(ren, "maze.png");
+    SDL_Texture* maze = IMG_LoadTexture(ren, "labirinto.png");
 	SDL_Texture* sprite = IMG_LoadTexture(ren, "pac-man-sprite.png");
     
     assert(maze != NULL);
@@ -49,10 +49,10 @@ int main (int argc, char* args[])
     bool ready = false;
     
     
-    SDL_Rect r_personagem = {470, 360, 50, 50};
+    SDL_Rect r_personagem = {100, 150, 40, 40};
     SDL_Rect c_personagem;
     
-    SDL_Rect r_maze = { 150,100, 700,700 };
+    SDL_Rect r_maze = {-40,50, 618,404 };
     SDL_Rect c_maze;
     
     //roundedBoxRGBA(ren, 200, 200, 800, 800, 20, 250,250,250,0);
@@ -79,7 +79,7 @@ int main (int argc, char* args[])
 		        if (evt.type == SDL_KEYDOWN) {
 		        	switch (evt.key.keysym.sym) {
 		                case SDLK_UP:
-				            if(r_personagem.y-5 > 150){
+				            if(r_personagem.y-5 > 63){
 								r_personagem.y -= 5;
 								para_cima = true;
 								movimento = 1;
@@ -97,7 +97,7 @@ int main (int argc, char* args[])
 							break;
 								   
 						case SDLK_DOWN:
-							if(r_personagem.y < 700){
+							if(r_personagem.y < 315){
 								r_personagem.y += 5;
 								para_baixo = true;
 								movimento = 2;
@@ -116,7 +116,7 @@ int main (int argc, char* args[])
 							break;
 							
 						case SDLK_LEFT:
-							if(r_personagem.x > 150 ){
+							if(r_personagem.x > 68 ){
 								r_personagem.x -= 5;
 								para_esquerda = true;
 								movimento = 3;
@@ -134,7 +134,7 @@ int main (int argc, char* args[])
 							break;
 								   
 						case SDLK_RIGHT:
-							if(r_personagem.x < 785) {
+							if(r_personagem.x < 400) {
 								r_personagem.x += 5;
 								para_direita = true;
 								movimento = 4;
@@ -176,16 +176,16 @@ int main (int argc, char* args[])
 			}
 			SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
 			
-			c_maze = (SDL_Rect) {   0, 0, 448,576 }; //labirinto
+			c_maze = (SDL_Rect) {   0, 0, 600,500 }; //labirinto
 			SDL_RenderCopy(ren, maze, &c_maze, &r_maze);
 			
 			/*SDL_SetRenderDrawColor(ren,250,250,250,0);
-			SDL_RenderDrawLine(ren,100,167,900,167); //limite topo
-			SDL_RenderDrawLine(ren,162,140,162,800); //limite lado esquerdo
-			SDL_RenderDrawLine(ren,839,140,839,800); //limite lado direito
-			SDL_RenderDrawLine(ren,100,752,900,752); //limite parte de baixo*/
+			SDL_RenderDrawLine(ren,50,75,450,75); //limite topo
+			SDL_RenderDrawLine(ren,68,60,68,400); //limite lado esquerdo
+			SDL_RenderDrawLine(ren,441,60,441,400); //limite lado direito
+			SDL_RenderDrawLine(ren,50,360,450,360); //limite parte de baixo/*
 			
-			SDL_SetRenderDrawColor(ren,250,250,250,10);//branco
+			/*SDL_SetRenderDrawColor(ren,250,250,250,10);//branco
 			SDL_Rect cubos = {165,170, 20,20};
 			SDL_RenderFillRect(ren, &cubos);
 			
@@ -199,7 +199,7 @@ int main (int argc, char* args[])
 			
 			SDL_SetRenderDrawColor(ren,100,100,100,10);//cinza
 			SDL_Rect cubos4 = {215,200, 20, 20};
-			SDL_RenderFillRect(ren, &cubos4);
+			SDL_RenderFillRect(ren, &cubos4);*/
 			
 			
 			
