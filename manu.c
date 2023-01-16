@@ -24,7 +24,7 @@ int main (int argc, char* args[])
     SDL_Color padrao = { 255,255,255,255 };
     SDL_Color focus = { 237,139,0,255 };
 
-    TTF_Font *ourFont = TTF_OpenFont("Arcade.ttf",100);
+    TTF_Font *ourFont = TTF_OpenFont("Pacmania.ttf",100);
     
     struct SDL_Surface* listaSurfaceText[2];
     listaSurfaceText[0] = TTF_RenderText_Solid(ourFont, "Play",padrao);  
