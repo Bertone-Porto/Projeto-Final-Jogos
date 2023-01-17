@@ -1,3 +1,5 @@
+//gcc main.c -lSDL2 -lSDL2_image -lSDL2_ttf -o main
+
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
