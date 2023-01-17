@@ -5,6 +5,7 @@
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <SDL2/SDL_ttf.h>
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -36,6 +37,17 @@ int main (int argc, char* args[])
     
     assert(maze != NULL);
 	assert(sprite != NULL);
+	
+	int mazeVet[10] = [00000000000,
+			  	       01111111110,
+			  	       01000100010,
+			 	       01011111010,
+			           01110101110,
+				       01010101010,
+				       01110101110,
+				       01011111010,
+				       01110101110,
+				       00000000000];
 
     /* EXECUÇÃO */
     bool continua = true;
