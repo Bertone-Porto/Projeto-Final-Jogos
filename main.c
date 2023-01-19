@@ -1,9 +1,4 @@
-
-    while(continua){
-		if(!IniciaMenu(win, ren)){
-			continua = false;
-		}else{
-			SDL_SetRenderDrawColor(ren, 100,100,100,0x00);//gcc main.c -lSDL2 -lSDL2_image -lSDL2_ttf -o main
+/*gcc teste.c -lSDL2 -lSDL2_gfx -lSDL2_image -o teste*/
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -11,6 +6,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <SDL2/SDL_ttf.h>
+
+enum Personagem{PARADO, MOVER_ESQUERDA, MOVER_DIREITA, MOVER_CIMA, MOVER_BAIXO};
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -26,138 +23,64 @@ int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	return isevt;
 }
 
-void mudaCor(SDL_Renderer* ren,SDL_Surface* listaS[],SDL_Texture* listaT[],SDL_Color cor,int i,char nome[],TTF_Font *ourFont){
-	listaS[i] = TTF_RenderText_Solid(ourFont, nome,cor);  
-	listaT[i] = SDL_CreateTextureFromSurface(ren,listaS[i]);
-}
-
-bool IniciaMenu(SDL_Window* win, SDL_Renderer* ren){
-	//SDL_Renderer* ren = SDL_CreateRenderer(win, -1, 0);
-    TTF_Init();
-    SDL_Color padrao = { 255,231,55,255 };
-    SDL_Color focus = { 237,139,0,255 };
-
-    TTF_Font *ourFont = TTF_OpenFont("Pacmania.ttf",100);
+int main (int argc, char* args[])
+{
+    /* INICIALIZACAO */
+    SDL_Init(SDL_INIT_EVERYTHING);
+    IMG_Init(0);
+    SDL_Window* win = SDL_CreateWindow("Animação",
+                         SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED,
+                         500, 500, SDL_WINDOW_BORDERLESS
+                      );
+    SDL_Renderer* ren = SDL_CreateRenderer(win, -1, 0);
+    SDL_Texture* maze = IMG_LoadTexture(ren, "labirinto.png");
+	SDL_Texture* sprite = IMG_LoadTexture(ren, "pac-man-sprite.png");
     
-    struct SDL_Surface* listaSurfaceText[3];
-    listaSurfaceText[0] = TTF_RenderText_Solid(ourFont, "Play",padrao);  
-    listaSurfaceText[1] = TTF_RenderText_Solid(ourFont, "Quit",padrao); 
-    listaSurfaceText[2] = TTF_RenderText_Solid(ourFont, "PACMAN",padrao); 
- 
-    struct SDL_Texture* listaTextureText[3];
-	listaTextureText[0] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[0]);
-    listaTextureText[1] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[1]);
-	listaTextureText[2] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[2]);
+    assert(maze != NULL);
+	assert(sprite != NULL);
+	
+	int mazeVet[10][11] =   {{0,0,0,0,0,0,0,0,0,0,0}
+							,{0,1,1,1,1,1,1,1,1,1,0}
+							,{0,1,0,0,0,1,0,0,0,1,0}
+							,{0,1,0,1,1,1,1,1,0,1,0}
+							,{0,1,1,1,0,1,0,1,1,1,0}
+							,{0,1,0,1,0,1,0,1,0,1,0}
+							,{0,1,1,1,0,1,0,1,1,1,0}
+							,{0,1,0,1,1,1,1,1,0,1,0}
+							,{0,1,1,1,0,1,0,1,1,1,0}
+							,{0,0,0,0,0,0,0,0,0,0,0}};
 
-	SDL_Surface* bertoneSur = TTF_RenderText_Solid(ourFont, "bertone",padrao);
-    SDL_Texture* bertoneTex = SDL_CreateTextureFromSurface(ren,bertoneSur);
-    int i;
-    SDL_Point mouse = {0,0};
-    SDL_Rect recPlay = {200,120,100,30};
-    SDL_Rect recQuit = {200,200,100,30};
-	SDL_Rect recTitle = {110, 50, 300,50};
-    bool selecionado = false;
-    bool gameIsRunning = true;
-
-
-	while (gameIsRunning) {
-    	SDL_SetRenderDrawColor(ren,0,0,0,255);
-		SDL_RenderClear(ren);
-		SDL_Event event;
-		while(SDL_PollEvent(&event)){
-			switch(event.type){
-				case SDL_QUIT:
-					gameIsRunning = false;
-				break;
-				case SDL_MOUSEMOTION:
-						SDL_GetMouseState(&mouse.x,&mouse.y);
-						if(SDL_PointInRect(&mouse,&recPlay)){
-							//listaSurfaceText[0] = TTF_RenderText_Solid(ourFont, "Play",focus);  
-					   		//listaTextureText[0] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[0]);
-					   		mudaCor(ren,listaSurfaceText,listaTextureText,focus,0,"Play",ourFont);
-					   	}
-					   	else if(SDL_PointInRect(&mouse,&recQuit)){
-					   		//listaSurfaceText[1] = TTF_RenderText_Solid(ourFont, "Quit",focus);  
-					   		//listaTextureText[1] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[1]);
-					   		mudaCor(ren,listaSurfaceText,listaTextureText,focus,1,"Quit",ourFont);
-					   	}
-					   	else{
-							/*listaSurfaceText[0] = TTF_RenderText_Solid(ourFont, "Play",padrao);  
-							listaTextureText[0] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[0]);
-							listaSurfaceText[1] = TTF_RenderText_Solid(ourFont, "Quit",padrao);  
-							listaTextureText[1] = SDL_CreateTextureFromSurface(ren,listaSurfaceText[1]);*/
-					   		mudaCor(ren,listaSurfaceText,listaTextureText,padrao,0,"Play",ourFont);
-					   		mudaCor(ren,listaSurfaceText,listaTextureText,padrao,1,"Quit",ourFont);
-							selecionado = false;
-					   	}
-				break;
-				case SDL_MOUSEBUTTONDOWN:	
-					if(event.button.button==SDL_BUTTON_LEFT){
-						if(SDL_PointInRect(&mouse,&recQuit)) selecionado = true;
-					}
-					if(event.button.button==SDL_BUTTON_LEFT){
-						if(SDL_PointInRect(&mouse,&recPlay)) selecionado = true;
-					}
-				case SDL_MOUSEBUTTONUP:	
-					if(event.button.button==SDL_BUTTON_LEFT){
-						if(event.button.state==SDL_RELEASED){
-							if(SDL_PointInRect(&mouse,&recQuit) && selecionado) {
-								gameIsRunning = false;
-								return false;
-							}
-							if(SDL_PointInRect(&mouse,&recPlay) && selecionado) {
-								gameIsRunning = false;
-								return true;
-							}
-						}
-					}
-				
-				break;
-			}
-		}
-		
-		SDL_RenderCopy(ren,listaTextureText[0],NULL,&recPlay);
-		SDL_RenderCopy(ren,listaTextureText[1],NULL,&recQuit);
-		SDL_RenderCopy(ren,listaTextureText[2],NULL,&recTitle);
-		SDL_RenderPresent(ren);
-	}	
-
-	for(i = 0; i < 3;i++){
-		SDL_FreeSurface(listaSurfaceText[i]);
-		SDL_DestroyTexture(listaTextureText[i]);
-	}
-	mouse.x = mouse.y = 0;
-	TTF_CloseFont(ourFont);
-	//SDL_DestroyRenderer(ren);
-	//SDL_DestroyWindow(win);  
-}
-
-void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Texture* maze){
-	bool continua = true;
+    /* EXECUÇÃO */
+    bool continua = true;
     SDL_Event evt;
     int isup = 1, movimento;
     int x =0, y=20;
     int espera = 50;
     int yC=-10, wC=40, hC=80;
-    int i=0, boca=0;
-    bool para_cima=false, para_baixo=false, para_esquerda = false, para_direita = true;
+    int i=0, boca=0, j;
+
     bool ready = false;
+    int posicao_x = 1;
+	int posicao_y = 1;
+	int estado_atual_p = PARADO;
     
-    SDL_Rect r_personagem = {100, 150, 40, 40};
+    SDL_Rect r_personagem = {60, 63, 40, 40};
     SDL_Rect c_personagem;
     
     SDL_Rect r_maze = {-40,50, 618,404 };
     SDL_Rect c_maze;
     
+    
     while (continua) {
+    	
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
    		SDL_RenderClear(ren);
-        
+
         switch (evt.type ) {
 				case SDL_QUIT:
 					continua = false;
 					break;	
-				
 		}
         
       	Uint32 antes = SDL_GetTicks();
@@ -170,7 +93,28 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 		        if (evt.type == SDL_KEYDOWN) {
 		        	switch (evt.key.keysym.sym) {
 		                case SDLK_UP:
-				            if(r_personagem.y-5 > 63){
+							if(mazeVet[posicao_x-1][posicao_y] == 1){
+								estado_atual_p = MOVER_CIMA;
+
+								posicao_x -= 1;
+								r_personagem.y -= 35;
+								ready = true;
+								movimento = 1;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=40;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+				            /*if(r_personagem.y-5 > 63){
 								r_personagem.y -= 5;
 								para_cima = true;
 								movimento = 1;
@@ -184,11 +128,33 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 							break;
 								   
 						case SDLK_DOWN:
-							if(r_personagem.y < 315){
+							if(mazeVet[posicao_x+1][posicao_y] == 1){
+								estado_atual_p = MOVER_BAIXO;
+
+								posicao_x += 1;
+								r_personagem.y += 35;
+								ready = true;
+								movimento = 2;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=60;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+								
+								
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+							/*if(r_personagem.y < 315){
 								r_personagem.y += 5;
 								para_baixo = true;
 								movimento = 2;
@@ -202,12 +168,33 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 
 							break;
 							
 						case SDLK_LEFT:
-							if(r_personagem.x > 68 ){
+							if(mazeVet[posicao_x][posicao_y-1] == 1){
+								estado_atual_p = MOVER_ESQUERDA;
+
+								posicao_y -= 1;
+								r_personagem.x -= 42;
+								ready = true;
+								movimento = 3;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=0;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+								
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+							/*if(r_personagem.x > 68 ){
 								r_personagem.x -= 5;
 								para_esquerda = true;
 								movimento = 3;
@@ -221,11 +208,32 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 							break;
 								   
 						case SDLK_RIGHT:
-							if(r_personagem.x < 400) {
+							if(mazeVet[posicao_x][posicao_y+1] == 1){
+								estado_atual_p = MOVER_DIREITA;
+
+								posicao_y += 1;
+								r_personagem.x += 42;
+								ready = true;
+								movimento = 4;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=20;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+								
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+							/*if(r_personagem.x < 400) {
 								r_personagem.x += 5;
 								para_direita = true;
 								movimento = 4;
@@ -239,27 +247,25 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 							break;
-						
-						case SDLK_ESCAPE:
-							IniciaMenu(win, ren);
-							break;
-						
 					}
 				}	
+			
+	
 		} else{   
-			switch(movimento){
-				case 1: //para cima
+			
+			switch(estado_atual_p){
+				case MOVER_CIMA: //para cima
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
-				case 2: //para baixo
+				case MOVER_BAIXO: //para baixo
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
-				case 3: //para esquerda
+				case MOVER_ESQUERDA: //para esquerda
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
-				case 4: //para direita
+				case MOVER_DIREITA: //para direita
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 					break;
 			}
@@ -272,57 +278,41 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 			c_maze = (SDL_Rect) {   0, 0, 600,500 }; //labirinto
 			SDL_RenderCopy(ren, maze, &c_maze, &r_maze);
 			
+			/*SDL_SetRenderDrawColor(ren,250,250,250,0);
+			SDL_RenderDrawLine(ren,50,75,450,75); //limite topo
+			SDL_RenderDrawLine(ren,68,60,68,400); //limite lado esquerdo
+			SDL_RenderDrawLine(ren,441,60,441,400); //limite lado direito
+			SDL_RenderDrawLine(ren,50,360,450,360); //limite parte de baixo/*
+			
+			/*SDL_SetRenderDrawColor(ren,250,250,250,10);//branco
+			SDL_Rect cubos = {165,170, 20,20};
+			SDL_RenderFillRect(ren, &cubos);
+			
+			SDL_SetRenderDrawColor(ren,250,0,0,10);//vermelho
+			SDL_Rect cubos2 = {215,170, 20, 20};
+			SDL_RenderFillRect(ren, &cubos2);
+			
+			SDL_SetRenderDrawColor(ren,0,250,0,10);//verde
+			SDL_Rect cubos3 = {165,200, 20,20};
+			SDL_RenderFillRect(ren, &cubos3);
+			
+			SDL_SetRenderDrawColor(ren,100,100,100,10);//cinza
+			SDL_Rect cubos4 = {215,200, 20, 20};
+			SDL_RenderFillRect(ren, &cubos4);*/
+			
+			
+			
+			
 			SDL_RenderPresent(ren);
+			
 			espera = 150;
+			
 		}
     }
+
+    /* FINALIZACAO */
     SDL_DestroyTexture(maze);
-}
 
-
-
-
-int main (int argc, char* args[])
-{
-     /* INICIALIZACAO */
-    SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_Window* win = SDL_CreateWindow("PAC-MAN",
-                         SDL_WINDOWPOS_UNDEFINED,
-                         SDL_WINDOWPOS_UNDEFINED,
-                         500, 500, SDL_WINDOW_SHOWN
-                      );
-    SDL_Renderer* ren = SDL_CreateRenderer(win, -1, 0);
-	SDL_Texture* maze = IMG_LoadTexture(ren, "labirinto.png");
-	SDL_Texture* sprite = IMG_LoadTexture(ren, "pac-man-sprite.png");
-	assert(maze != NULL);
-	assert(sprite != NULL);
-
-	bool continua = true;
-	/* EXECUÇÃO */
-    SDL_SetRenderDrawColor(ren, 0,0,0,0x00);
-    SDL_RenderClear(ren);
-	
-    while(continua){
-		if(IniciaMenu(win, ren)){
-			IniciaJogo(win, ren, sprite, maze);
-		}else{
-			continua = false;
-		}
-		
-	}
-    /* FINALIZACAO */
-    SDL_DestroyRenderer(ren);
-    SDL_DestroyWindow(win);
-    SDL_Quit();
-}
-
-			SDL_Rect r1 = {50,50,50,50};
-			SDL_RenderFillRect(ren, &r1);
-			SDL_Delay(1000);
-		}
-		
-	}
-    /* FINALIZACAO */
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
