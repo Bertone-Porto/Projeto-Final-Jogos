@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <SDL2/SDL_ttf.h>
 
+enum Personagem{PARADO, MOVER_ESQUERDA, MOVER_DIREITA, MOVER_CIMA, MOVER_BAIXO};
+
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
 	int isevt = SDL_WaitEventTimeout(evt, *ms);
@@ -38,16 +40,16 @@ int main (int argc, char* args[])
     assert(maze != NULL);
 	assert(sprite != NULL);
 	
-	int mazeVet[10] = [00000000000,
-			  	       01111111110,
-			  	       01000100010,
-			 	       01011111010,
-			           01110101110,
-				       01010101010,
-				       01110101110,
-				       01011111010,
-				       01110101110,
-				       00000000000];
+	int mazeVet[10][11] =   {{0,0,0,0,0,0,0,0,0,0,0}
+							,{0,1,1,1,1,1,1,1,1,1,0}
+							,{0,1,0,0,0,1,0,0,0,1,0}
+							,{0,1,0,1,1,1,1,1,0,1,0}
+							,{0,1,1,1,0,1,0,1,1,1,0}
+							,{0,1,0,1,0,1,0,1,0,1,0}
+							,{0,1,1,1,0,1,0,1,1,1,0}
+							,{0,1,0,1,1,1,1,1,0,1,0}
+							,{0,1,1,1,0,1,0,1,1,1,0}
+							,{0,0,0,0,0,0,0,0,0,0,0}};
 
     /* EXECUÇÃO */
     bool continua = true;
@@ -56,25 +58,25 @@ int main (int argc, char* args[])
     int x =0, y=20;
     int espera = 50;
     int yC=-10, wC=40, hC=80;
-    int i=0, boca=0;
-    bool para_cima=false, para_baixo=false, para_esquerda = false, para_direita = true;
+    int i=0, boca=0, j;
+    //bool para_cima=false, para_baixo=false, para_esquerda = false, para_direita = true;
     bool ready = false;
+    int posicao_x = 1;
+	int posicao_y = 5;
+	int estado_atual_p = PARADO;
     
-    
-    SDL_Rect r_personagem = {100, 150, 40, 40};
+    SDL_Rect r_personagem = {230, 200, 40, 40};
     SDL_Rect c_personagem;
     
     SDL_Rect r_maze = {-40,50, 618,404 };
     SDL_Rect c_maze;
     
-    //roundedBoxRGBA(ren, 200, 200, 800, 800, 20, 250,250,250,0);
-
     
     while (continua) {
     	
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
    		SDL_RenderClear(ren);
-        
+
         switch (evt.type ) {
 				case SDL_QUIT:
 					continua = false;
@@ -91,7 +93,27 @@ int main (int argc, char* args[])
 		        if (evt.type == SDL_KEYDOWN) {
 		        	switch (evt.key.keysym.sym) {
 		                case SDLK_UP:
-				            if(r_personagem.y-5 > 63){
+							if(mazeVet[posicao_x][posicao_y-1] == 1){
+								posicao_y -= 1;
+								estado_atual_p = MOVER_CIMA;
+								r_personagem.y -= 15;
+
+								movimento = 1;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=40;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+				            /*if(r_personagem.y-5 > 63){
 								r_personagem.y -= 5;
 								para_cima = true;
 								movimento = 1;
@@ -105,11 +127,32 @@ int main (int argc, char* args[])
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 							break;
 								   
 						case SDLK_DOWN:
-							if(r_personagem.y < 315){
+							if(mazeVet[posicao_x][posicao_y+1] == 1){
+								posicao_y += 1;
+								estado_atual_p = MOVER_BAIXO;
+								r_personagem.y += 15;
+
+								movimento = 2;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=60;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+								
+								
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+							/*if(r_personagem.y < 315){
 								r_personagem.y += 5;
 								para_baixo = true;
 								movimento = 2;
@@ -123,12 +166,32 @@ int main (int argc, char* args[])
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 
 							break;
 							
 						case SDLK_LEFT:
-							if(r_personagem.x > 68 ){
+							if(mazeVet[posicao_x-1][posicao_y] == 1){
+								posicao_x -= 1;
+								estado_atual_p = MOVER_ESQUERDA;
+								r_personagem.x -= 15;
+
+								movimento = 3;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=0;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+								
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+							/*if(r_personagem.x > 68 ){
 								r_personagem.x -= 5;
 								para_esquerda = true;
 								movimento = 3;
@@ -142,11 +205,31 @@ int main (int argc, char* args[])
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 							break;
 								   
 						case SDLK_RIGHT:
-							if(r_personagem.x < 400) {
+							if(mazeVet[posicao_x+1][posicao_y] == 1){
+								posicao_x += 1;
+								estado_atual_p = MOVER_DIREITA;
+								r_personagem.x += 15;
+
+								movimento = 4;
+								boca++;
+								if(boca % 2 == 0){
+									x=0; y=20;
+								} else{
+									x=40; y=0;
+								}
+								if(boca > 11){
+									boca=0;
+								}
+								
+							} else{
+								estado_atual_p = PARADO;
+							}
+							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
+							/*if(r_personagem.x < 400) {
 								r_personagem.x += 5;
 								para_direita = true;
 								movimento = 4;
@@ -160,7 +243,7 @@ int main (int argc, char* args[])
 								if(boca > 11){
 									boca=0;
 								}
-							}
+							}*/
 							break;
 					}
 				}	
@@ -217,7 +300,7 @@ int main (int argc, char* args[])
 			
 			
 			SDL_RenderPresent(ren);
-
+			
 			espera = 150;
 			
 		}
