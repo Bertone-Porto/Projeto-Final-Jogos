@@ -8,7 +8,7 @@
   Pac-Man clássico.
   
 4. O que você pretende e não pretende implementar:
-  Não adicionar poderes ao jogador como conseguir "comer" os fantasmas.
+  Não adicionar poderes ao jogador como conseguir "comer" os fantasmas. Um mapa aberto e livre para andar, com alguns obstáculos e fantasmas.
   
 5. Qual o link para o repositório com o código fonte? 
 https://github.com/Bertone-Porto/Projeto-Final-Jogos
