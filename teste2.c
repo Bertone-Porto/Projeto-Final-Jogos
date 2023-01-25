@@ -43,22 +43,11 @@ int main (int argc, char* args[])
                          500, 500, SDL_WINDOW_SHOWN
                       );
     SDL_Renderer* ren = SDL_CreateRenderer(win, -1, 0);
-    //SDL_Texture* maze = IMG_LoadTexture(ren, "labirinto.png");
 	SDL_Texture* sprite = IMG_LoadTexture(ren, "pac-man-sprite.png");
     
-    //assert(maze != NULL);
+
 	assert(sprite != NULL);
 	
-	/*int mazeVet[10][11] =   {{0,0,0,0,0,0,0,0,0,0,0}
-							,{0,1,1,1,1,1,1,1,1,1,0}
-							,{0,1,0,0,0,1,0,0,0,1,0}
-							,{0,1,0,1,1,1,1,1,0,1,0}
-							,{0,1,1,1,0,1,0,1,1,1,0}
-							,{0,1,0,1,0,1,0,1,0,1,0}
-							,{0,1,1,1,0,1,0,1,1,1,0}
-							,{0,1,0,1,1,1,1,1,0,1,0}
-							,{0,1,1,1,0,1,0,1,1,1,0}
-							,{0,0,0,0,0,0,0,0,0,0,0}};*/
 
     /* EXECUÇÃO */
     bool continua = true;
@@ -68,16 +57,13 @@ int main (int argc, char* args[])
     int espera = 50;
     int yC=-10, wC=40, hC=80;
     int i=0, boca=0, j;
-    //bool para_cima=false, para_baixo=false, para_esquerda = false, para_direita = true;
     bool ready = false;
     int posicao_x = 1;
 	int posicao_y = 1;
 	int estado_atual_p = PARADO;
     
     SDL_Rect r_personagem = {60, 63, 30, 30};
-    SDL_Rect c_personagem;   
-    
-    
+    SDL_Rect c_personagem;    
     
     while (continua) {
     	
@@ -93,10 +79,7 @@ int main (int argc, char* args[])
 		SDL_Rect obj6 = {250, 250, 80,30};
 		
 		
-		
-		
-		
-        switch (evt.type ) {
+        switch (evt.type) {
 				case SDL_QUIT:
 					continua = false;
 					break;	
@@ -112,89 +95,35 @@ int main (int argc, char* args[])
 		        if (evt.type == SDL_KEYDOWN) {
 		        	switch (evt.key.keysym.sym) {
 		                case SDLK_UP:	
-				            if(!SDL_HasIntersection(&r_personagem, &obj1)){
-				            	r_personagem.y -= 5;
-
-								estado_atual_p = MOVER_CIMA;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=40;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}					
-								
-							} /*else{
+				            if(estado_atual_p == PARADO || !SDL_HasIntersection(&r_personagem, &obj1)){
+								estado_atual_p = MOVER_CIMA;						
+							} else{
 								estado_atual_p = PARADO;
-							}*/
+							}
 							break;
 								   
 						case SDLK_DOWN:
-							if(!SDL_HasIntersection(&r_personagem, &obj1)){
-								r_personagem.y += 5;
-
-								estado_atual_p = MOVER_BAIXO;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=60;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-								
-							} /*else{
+							if(estado_atual_p == PARADO || !SDL_HasIntersection(&r_personagem, &obj1)){
+								estado_atual_p = MOVER_BAIXO;								
+							} else{
 								estado_atual_p = PARADO;
-							
-							}*/
-
+							}
 							break;
 							
 						case SDLK_LEFT:
-							if(!SDL_HasIntersection(&r_personagem, &obj1) ){
-								r_personagem.x -= 5;
-
-								estado_atual_p = MOVER_ESQUERDA;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=0;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-							
-								
-							} /*else{
-								r_personagem.x += 1;
-							}*/
+							if(estado_atual_p == PARADO || !SDL_HasIntersection(&r_personagem, &obj1) ){
+								estado_atual_p = MOVER_ESQUERDA;					
+							} else{
+								estado_atual_p = PARADO;
+							}
 							break;
 								   
 						case SDLK_RIGHT:
-							if(!SDL_HasIntersection(&r_personagem, &obj1)) {
-								r_personagem.x += 5;
-
+							if(estado_atual_p == PARADO || !SDL_HasIntersection(&r_personagem, &obj1)) {
 								estado_atual_p = MOVER_DIREITA;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=20;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-							} /*else{
+							} else{
 								estado_atual_p = PARADO;
-							}*/
+							}
 							break;
 					}
 				}	
@@ -205,15 +134,59 @@ int main (int argc, char* args[])
 			switch(estado_atual_p){
 				case MOVER_CIMA: //para cima
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					r_personagem.y -= 5;
+					ready = true;
+					boca++;
+					if(boca % 2 == 0){
+						x=0; y=40;
+					} else{
+						x=40; y=0;
+					}
+					if(boca > 11){
+						boca=0;
+					}
 					break;
 				case MOVER_BAIXO: //para baixo
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					r_personagem.y += 5;
+					ready = true;
+					boca++;
+					if(boca % 2 == 0){
+						x=0; y=60;
+					} else{
+						x=40; y=0;
+					}
+					if(boca > 11){
+						boca=0;
+					}
 					break;
 				case MOVER_ESQUERDA: //para esquerda
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					r_personagem.x -= 5;
+					ready = true;
+					boca++;
+					if(boca % 2 == 0){
+						x=0; y=0;
+					} else{
+						x=40; y=0;
+					}
+					if(boca > 11){
+						boca=0;
+					}
 					break;
 				case MOVER_DIREITA: //para direita
 					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					r_personagem.x += 5;
+					ready = true;
+					boca++;
+					if(boca % 2 == 0){
+						x=0; y=20;
+					} else{
+						x=40; y=0;
+					}
+					if(boca > 11){
+						boca=0;
+					}
 					break;
 			}
 				
@@ -221,9 +194,7 @@ int main (int argc, char* args[])
 				c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
 			}
 			SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
-			
-
-			
+					
 			SDL_RenderFillRect(ren, &obj1);
 			SDL_RenderFillRect(ren, &obj2);
 			SDL_RenderFillRect(ren, &obj3);
@@ -239,8 +210,6 @@ int main (int argc, char* args[])
     }
 
     /* FINALIZACAO */
-    //SDL_DestroyTexture(maze);
-
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
