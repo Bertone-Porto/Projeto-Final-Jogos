@@ -24,13 +24,16 @@ int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 }
 
 
-int RectInRect (SDL_Rect* r1, SDL_Rect* r2) {
-    return !( r1->x+r2->w < r1->x ||
-              r1->y+r2->h < r1->y ||
-              r1->x > r1->x+r1->w ||
-              r1->y > r1->y+r1->h );
+int Tem_Contato (SDL_Rect * r1, SDL_Rect * col) {
+    int i; SDL_Rect temp;
+	temp.x = r1->x-3;
+	temp.y = r1->y-3;
+	temp.w = r1->w+3;
+	temp.h = r1->h+3;
+	for (i = 0; i < 8; i++) {
+		if (SDL_HasIntersection(&temp, &col[i])) return 1;
+	} return 0; 
 }
-
 
 int main (int argc, char* args[])
 {
@@ -71,13 +74,15 @@ int main (int argc, char* args[])
    		SDL_RenderClear(ren);
 
 		SDL_SetRenderDrawColor(ren, 0,0,250,0);
-		SDL_Rect obj1 = {40, 100, 30,80};
-		SDL_Rect obj2 = {380, 100, 30,80};
-		SDL_Rect obj3 = {380, 400, 30,80};
-		SDL_Rect obj4 = {250, 250, 30,80};
-		SDL_Rect obj5 = {380, 20, 30,80};
-		SDL_Rect obj6 = {250, 250, 80,30};
-		
+		SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
+		walls[0] = (SDL_Rect) {0, 0, 30,80};
+		walls[1] = (SDL_Rect) {470, 0, 30,80};	
+		walls[2] = (SDL_Rect) {0, 420, 30,80};
+		walls[3] = (SDL_Rect) {470, 420, 30,80};
+		walls[4] = (SDL_Rect) {220, 210, 30,100};
+		walls[5] = (SDL_Rect) {180, 240, 100,30};
+		walls[6] = (SDL_Rect) {160, 50, 150, 30};
+		walls[7] = (SDL_Rect) {160, 450, 150, 30};
 		
         switch (evt.type) {
 				case SDL_QUIT:
@@ -117,7 +122,7 @@ int main (int argc, char* args[])
 			
 			switch(estado_atual_p){
 				case MOVER_CIMA: //para cima
-					if(!SDL_HasIntersection(&r_personagem, &obj1)){
+					if(!Tem_Contato(&r_personagem, walls)){
 						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 						r_personagem.y -= 5;
 						ready = true;
@@ -136,7 +141,7 @@ int main (int argc, char* args[])
 					}
 					break;
 				case MOVER_BAIXO: //para baixo
-					if(!SDL_HasIntersection(&r_personagem, &obj1)){
+					if(!Tem_Contato(&r_personagem, walls)){
 						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 						r_personagem.y += 5;
 						ready = true;
@@ -155,7 +160,7 @@ int main (int argc, char* args[])
 					}
 					break;
 				case MOVER_ESQUERDA: //para esquerda
-					if(!SDL_HasIntersection(&r_personagem, &obj1)){
+					if(!Tem_Contato(&r_personagem, walls)){
 						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 						r_personagem.x -= 5;
 						ready = true;
@@ -174,7 +179,7 @@ int main (int argc, char* args[])
 					}
 					break;
 				case MOVER_DIREITA: //para direita
-					if(!SDL_HasIntersection(&r_personagem, &obj1)){
+					if(!Tem_Contato(&r_personagem, walls)){
 						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
 						r_personagem.x += 5;
 						ready = true;
@@ -193,19 +198,16 @@ int main (int argc, char* args[])
 					}
 					break;
 			}
+			
 				
 			if(!ready){
 				c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
 			}
 			SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
 					
-			SDL_RenderFillRect(ren, &obj1);
-			SDL_RenderFillRect(ren, &obj2);
-			SDL_RenderFillRect(ren, &obj3);
-			SDL_RenderFillRect(ren, &obj4);
-			SDL_RenderFillRect(ren, &obj5);
-			SDL_RenderFillRect(ren, &obj6);
-			
+			for (i=0; i<8; i++)
+				SDL_RenderFillRect(ren, &walls[i]);
+
 			SDL_RenderPresent(ren);
 			
 			espera = 150;
