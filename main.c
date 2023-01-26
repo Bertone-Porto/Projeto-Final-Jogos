@@ -24,6 +24,18 @@ int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	return isevt;
 }
 
+bool Tem_Contato (SDL_Rect * r1, SDL_Rect * col) {
+    int i; SDL_Rect temp;
+	temp.x = r1->x-3;
+	temp.y = r1->y-3;
+	temp.w = r1->w+3;
+	temp.h = r1->h+3;
+	for (i = 0; i < 8; i++) {
+		if (SDL_HasIntersection(&temp, &col[i])) return 1;
+	} return 0; 
+}
+
+
 void mudaCor(SDL_Renderer* ren,SDL_Surface* listaS[],SDL_Texture* listaT[],SDL_Color cor,int i,char nome[],TTF_Font *ourFont){
 	listaS[i] = TTF_RenderText_Solid(ourFont, nome,cor);  
 	listaT[i] = SDL_CreateTextureFromSurface(ren,listaS[i]);
@@ -131,18 +143,7 @@ bool IniciaMenu(SDL_Window* win, SDL_Renderer* ren){
 }
 
 void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Texture* maze){
-	int mazeVet[10][11] =   {{0,0,0,0,0,0,0,0,0,0,0}
-							,{0,1,1,1,1,1,1,1,1,1,0}
-							,{0,1,0,0,0,1,0,0,0,1,0}
-							,{0,1,0,1,1,1,1,1,0,1,0}
-							,{0,1,1,1,0,1,0,1,1,1,0}
-							,{0,1,0,1,0,1,0,1,0,1,0}
-							,{0,1,1,1,0,1,0,1,1,1,0}
-							,{0,1,0,1,1,1,1,1,0,1,0}
-							,{0,1,1,1,0,1,0,1,1,1,0}
-							,{0,0,0,0,0,0,0,0,0,0,0}};
-
-    /* EXECUÇÃO */
+	/* EXECUÇÃO */
     bool continua = true;
     SDL_Event evt;
     int isup = 1, movimento;
@@ -150,25 +151,31 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
     int espera = 50;
     int yC=-10, wC=40, hC=80;
     int i=0, boca=0, j;
-    //bool para_cima=false, para_baixo=false, para_esquerda = false, para_direita = true;
     bool ready = false;
     int posicao_x = 1;
 	int posicao_y = 1;
 	int estado_atual_p = PARADO;
     
-    SDL_Rect r_personagem = {60, 63, 40, 40};
-    SDL_Rect c_personagem;
-    
-    SDL_Rect r_maze = {-40,50, 618,404 };
-    SDL_Rect c_maze;
-    
+    SDL_Rect r_personagem = {60, 63, 30, 30};
+    SDL_Rect c_personagem;    
     
     while (continua) {
     	
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
    		SDL_RenderClear(ren);
 
-        switch (evt.type ) {
+		SDL_SetRenderDrawColor(ren, 0,0,250,0);
+		SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
+		walls[0] = (SDL_Rect) {0, 0, 30,80};
+		walls[1] = (SDL_Rect) {470, 0, 30,80};	
+		walls[2] = (SDL_Rect) {0, 420, 30,80};
+		walls[3] = (SDL_Rect) {470, 420, 30,80};
+		walls[4] = (SDL_Rect) {220, 210, 30,100};
+		walls[5] = (SDL_Rect) {180, 240, 100,30};
+		walls[6] = (SDL_Rect) {160, 50, 150, 30};
+		walls[7] = (SDL_Rect) {160, 450, 150, 30};
+		
+        switch (evt.type) {
 				case SDL_QUIT:
 					continua = false;
 					break;	
@@ -183,162 +190,20 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
             }   	
 		        if (evt.type == SDL_KEYDOWN) {
 		        	switch (evt.key.keysym.sym) {
-		                case SDLK_UP:
-							if(mazeVet[posicao_x-1][posicao_y] == 1){
-								estado_atual_p = MOVER_CIMA;
-
-								posicao_x -= 1;
-								r_personagem.y -= 35;
-								ready = true;
-								movimento = 1;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=40;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-
-							} else{
-								estado_atual_p = PARADO;
-							}
-							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
-				            /*if(r_personagem.y-5 > 63){
-								r_personagem.y -= 5;
-								para_cima = true;
-								movimento = 1;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=40;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-							}*/
+		                case SDLK_UP:	
+				           	estado_atual_p = MOVER_CIMA;
 							break;
 								   
 						case SDLK_DOWN:
-							if(mazeVet[posicao_x+1][posicao_y] == 1){
-								estado_atual_p = MOVER_BAIXO;
-
-								posicao_x += 1;
-								r_personagem.y += 35;
-								ready = true;
-								movimento = 2;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=60;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-								
-								
-							} else{
-								estado_atual_p = PARADO;
-							}
-							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
-							/*if(r_personagem.y < 315){
-								r_personagem.y += 5;
-								para_baixo = true;
-								movimento = 2;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=60;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-							}*/
-
+							estado_atual_p = MOVER_BAIXO;
 							break;
 							
 						case SDLK_LEFT:
-							if(mazeVet[posicao_x][posicao_y-1] == 1){
-								estado_atual_p = MOVER_ESQUERDA;
-
-								posicao_y -= 1;
-								r_personagem.x -= 42;
-								ready = true;
-								movimento = 3;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=0;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-								
-							} else{
-								estado_atual_p = PARADO;
-							}
-							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
-							/*if(r_personagem.x > 68 ){
-								r_personagem.x -= 5;
-								para_esquerda = true;
-								movimento = 3;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=0;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-							}*/
+							estado_atual_p = MOVER_ESQUERDA;
 							break;
 								   
 						case SDLK_RIGHT:
-							if(mazeVet[posicao_x][posicao_y+1] == 1){
-								estado_atual_p = MOVER_DIREITA;
-
-								posicao_y += 1;
-								r_personagem.x += 42;
-								ready = true;
-								movimento = 4;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=20;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-								
-							} else{
-								estado_atual_p = PARADO;
-							}
-							printf("posicao x: %d, posicao y: %d\n", posicao_x, posicao_y);
-							/*if(r_personagem.x < 400) {
-								r_personagem.x += 5;
-								para_direita = true;
-								movimento = 4;
-								ready = true;
-								boca++;
-								if(boca % 2 == 0){
-									x=0; y=20;
-								} else{
-									x=40; y=0;
-								}
-								if(boca > 11){
-									boca=0;
-								}
-							}*/
+							estado_atual_p = MOVER_DIREITA;
 							break;
 					}
 				}	
@@ -348,60 +213,98 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 			
 			switch(estado_atual_p){
 				case MOVER_CIMA: //para cima
-					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					if(!Tem_Contato(&r_personagem, walls)){
+						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+						r_personagem.y -= 5;
+						ready = true;
+						boca++;
+						if(boca % 2 == 0){
+							x=0; y=40;
+						} else{
+							x=40; y=0;
+						}
+						if(boca > 11){
+							boca=0;
+						}
+					}else{
+						r_personagem.y +=5;
+						estado_atual_p = MOVER_BAIXO;
+					}
 					break;
 				case MOVER_BAIXO: //para baixo
-					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					if(!Tem_Contato(&r_personagem, walls)){
+						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+						r_personagem.y += 5;
+						ready = true;
+						boca++;
+						if(boca % 2 == 0){
+							x=0; y=60;
+						} else{
+							x=40; y=0;
+						}
+						if(boca > 11){
+							boca=0;
+						}
+					}else{
+						r_personagem.y -=5;
+						estado_atual_p = MOVER_CIMA;
+					}
 					break;
 				case MOVER_ESQUERDA: //para esquerda
-					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					if(!Tem_Contato(&r_personagem, walls)){
+						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+						r_personagem.x -= 5;
+						ready = true;
+						boca++;
+						if(boca % 2 == 0){
+							x=0; y=0;
+						} else{
+							x=40; y=0;
+						}
+						if(boca > 11){
+							boca=0;
+						}
+					}else{
+						r_personagem.x +=5;
+						estado_atual_p = MOVER_DIREITA;
+					}
 					break;
 				case MOVER_DIREITA: //para direita
-					c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+					if(!Tem_Contato(&r_personagem, walls)){
+						c_personagem = (SDL_Rect) {x, y, 20, 20}; 
+						r_personagem.x += 5;
+						ready = true;
+						boca++;
+						if(boca % 2 == 0){
+							x=0; y=20;
+						} else{
+							x=40; y=0;
+						}
+						if(boca > 11){
+							boca=0;
+						}
+					}else{
+						r_personagem.x -= 5;
+						estado_atual_p = MOVER_ESQUERDA;
+					}
 					break;
 			}
+			
 				
 			if(!ready){
 				c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
 			}
 			SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
-			
-			c_maze = (SDL_Rect) {   0, 0, 600,500 }; //labirinto
-			SDL_RenderCopy(ren, maze, &c_maze, &r_maze);
-			
-			/*SDL_SetRenderDrawColor(ren,250,250,250,0);
-			SDL_RenderDrawLine(ren,50,75,450,75); //limite topo
-			SDL_RenderDrawLine(ren,68,60,68,400); //limite lado esquerdo
-			SDL_RenderDrawLine(ren,441,60,441,400); //limite lado direito
-			SDL_RenderDrawLine(ren,50,360,450,360); //limite parte de baixo/*
-			
-			/*SDL_SetRenderDrawColor(ren,250,250,250,10);//branco
-			SDL_Rect cubos = {165,170, 20,20};
-			SDL_RenderFillRect(ren, &cubos);
-			
-			SDL_SetRenderDrawColor(ren,250,0,0,10);//vermelho
-			SDL_Rect cubos2 = {215,170, 20, 20};
-			SDL_RenderFillRect(ren, &cubos2);
-			
-			SDL_SetRenderDrawColor(ren,0,250,0,10);//verde
-			SDL_Rect cubos3 = {165,200, 20,20};
-			SDL_RenderFillRect(ren, &cubos3);
-			
-			SDL_SetRenderDrawColor(ren,100,100,100,10);//cinza
-			SDL_Rect cubos4 = {215,200, 20, 20};
-			SDL_RenderFillRect(ren, &cubos4);*/
-			
-			
-			
-			
+					
+			for (i=0; i<8; i++)
+				SDL_RenderFillRect(ren, &walls[i]);
+
 			SDL_RenderPresent(ren);
 			
 			espera = 150;
 			
 		}
     }
-
-    SDL_DestroyTexture(maze);
 
 }
 
