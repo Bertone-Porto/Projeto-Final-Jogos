@@ -36,6 +36,9 @@ int main (int argc, char* args[])
     SDL_Event evt;
     int isup = 1;
     int x = 50, y=130;
+	int xR, yR;
+	int xP, yP;
+	int pos = 0;
     int espera = 50;
     int yC=-10, wC=20, hC=20;
     while (continua) {
@@ -63,13 +66,30 @@ int main (int argc, char* args[])
 	else{   
 		switch(isup){
 
-			//vermelho
+			//vermelho_cima
 			case 1:
-				c_red_ghost = (SDL_Rect) { 4,85, 20,20 };
+				y -= 5;
+				pos += 1;
+				if(pos == 1){
+					xR = 4; yR = 85;
+				}else{
+					xR = 24; yR = 85;
+					pos=0;
+				}
+				c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
 			break;
+			
 			case 2:
-				c_red_ghost = (SDL_Rect) { 24,85, wC,hC };
-			break; //vermelho_cima
+				y += 5;
+				pos += 1;
+				if(pos == 1){
+					xR = 44; yR = 85;
+				}else{
+					xR = 64; yR = 85;
+					pos=0;
+				}
+				c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
+			break;
 
 			/*case 1:
 				c_red_ghost = (SDL_Rect) { 44,85, 20,20 };
@@ -133,13 +153,12 @@ int main (int argc, char* args[])
 		SDL_RenderPresent(ren);
 		espera = 220;
 		if(y <= 160){
-			y -= 5;
+			isup = 1;
+		}else if(y >= 50){
+			isup = 2;
 		}
 
-		if(isup > 2){
-			isup = 1;
-			//y=130;
-		}
+		
 		
 	}
     }
