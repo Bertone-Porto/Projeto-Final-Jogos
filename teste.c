@@ -1,8 +1,14 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <SDL2/SDL_ttf.h>
+
+enum Estado_Ghost{PARA_BAIXO, PARA_CIMA, PARA_DIREITA, PARA_ESQUERDA};
+
+
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
 	int isevt = SDL_WaitEventTimeout(evt, *ms);
@@ -38,16 +44,20 @@ int main (int argc, char* args[])
     int x = 50, y=130;
 	int xR, yR;
 	int xP, yP;
-	int pos = 0;
+	int frame_red = 0, frame_pink = 0;
     int espera = 50;
     int yC=-10, wC=20, hC=20;
+    int estado_atual_redGhost, estado_atual_pinkGhost;
+    bool alcancou_topo = false, alcancou_fundo=false;
+    int posX_red=20, posY_red=160;
+    int posX_pink=120, posY_pink=50;
     while (continua) {
         SDL_SetRenderDrawColor(ren, 0,0,0,0);
         SDL_RenderClear(ren);
-        SDL_Rect r_red_ghost = { x,y, 30,30 };
+        SDL_Rect r_red_ghost = { posX_red,posY_red, 30,30 };
         SDL_Rect c_red_ghost;
 
-		SDL_Rect r_pink_ghost = { 50,50, 30,30 };
+		SDL_Rect r_pink_ghost = { posX_pink,posY_pink, 30,30 };
         SDL_Rect c_pink_ghost;
 
 
@@ -64,39 +74,38 @@ int main (int argc, char* args[])
 	}
 	
 	else{   
-		switch(isup){
+		switch(estado_atual_redGhost){
 
 			//vermelho_cima
-			case 1:
-				y -= 5;
-				pos += 1;
-				if(pos == 1){
+			case PARA_CIMA:
+
+				posY_red -= 5;
+				frame_red += 1;
+				if(frame_red == 1){
 					xR = 4; yR = 85;
 				}else{
 					xR = 24; yR = 85;
-					pos=0;
+					frame_red=0;
 				}
 				c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
+				
+
 			break;
 			
-			case 2:
-				y += 5;
-				pos += 1;
-				if(pos == 1){
+			case PARA_BAIXO:
+
+				posY_red += 5;
+				frame_red += 1;
+				if(frame_red == 1){
 					xR = 44; yR = 85;
 				}else{
 					xR = 64; yR = 85;
-					pos=0;
+					frame_red=0;
 				}
 				c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
+
 			break;
 
-			/*case 1:
-				c_red_ghost = (SDL_Rect) { 44,85, 20,20 };
-			break;
-			case 2:
-				c_red_ghost = (SDL_Rect) { 64,85, wC,hC };
-			break;*/ // vermelho_baixo
 
 			/*case 1:
 				c_red_ghost = (SDL_Rect) { 84,85, 20,20 };
@@ -146,21 +155,70 @@ int main (int argc, char* args[])
 
 
 		}
-		isup++;
+		switch(estado_atual_pinkGhost){
+			case PARA_CIMA:
+
+				frame_pink += 1;
+				posY_pink -= 5;
+				if(frame_pink == 1){
+					xP = 4; yP = 105;
+				}else{
+					xP = 24; yP = 105;
+					frame_pink =0;
+				}
+				c_pink_ghost = (SDL_Rect) { xP,yP, wC,hC };
+			break;
+			
+			case PARA_BAIXO:
+
+				posY_pink += 5;
+				frame_pink += 1;
+				if(frame_pink == 1){
+					xP = 44; yP = 105;
+				}else{
+					xP = 64; yP = 105;
+					frame_pink=0;
+				}
+				c_pink_ghost = (SDL_Rect) { xP,yP, wC,hC };
+			break;
+		}
+
+		//MOVIMENTAÇÃO VERTICAL RED GHOST
+		if(posY_red <= 165 && posY_red >= 50 && !alcancou_topo){
+			estado_atual_redGhost = PARA_CIMA;
+			if(posY_red == 50)
+				alcancou_topo = true;
+		}else if(alcancou_topo){
+			estado_atual_redGhost = PARA_BAIXO;
+			if(posY_red >= 160)
+				alcancou_topo = false;
+		}
+		
+		//MOVIMENTAÇÃO VERTICAL PINK GHOST
+		if(posY_pink >= 40 && posY_pink <= 165 && !alcancou_fundo){
+			estado_atual_pinkGhost = PARA_BAIXO;
+			if(posY_pink == 165){
+				alcancou_fundo = true;
+				printf("alcançou fundo\n");
+			}
+		}else if(alcancou_fundo){
+			estado_atual_pinkGhost = PARA_CIMA;
+			if(posY_pink <= 50){
+				alcancou_fundo = false;
+				printf("alcançou topo\n");
+			}
+		}
+
+	
+	
 	
 		SDL_RenderCopy(ren, sprite, &c_red_ghost, &r_red_ghost);
 		SDL_RenderCopy(ren, sprite, &c_pink_ghost, &r_pink_ghost);
 		SDL_RenderPresent(ren);
-		espera = 220;
-		if(y <= 160){
-			isup = 1;
-		}else if(y >= 50){
-			isup = 2;
-		}
+		espera = 50;
 
 		
-		
-	}
+		}
     }
 
     /* FINALIZACAO */
