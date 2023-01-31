@@ -9,6 +9,8 @@
 #include <SDL2/SDL_ttf.h>
 
 enum Personagem{PARADO, MOVER_ESQUERDA, MOVER_DIREITA, MOVER_CIMA, MOVER_BAIXO};
+enum Estado_Ghost{PARA_BAIXO, PARA_CIMA, PARA_DIREITA, PARA_ESQUERDA};
+
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -149,12 +151,22 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
     int isup = 1, movimento;
     int x =0, y=20;
     int espera = 50;
-    int yC=-10, wC=40, hC=80;
+    //int yC=-10, wC=40, hC=80;
     int i=0, boca=0, j;
     bool ready = false;
     int posicao_x = 1;
 	int posicao_y = 1;
 	int estado_atual_p = PARADO;
+	
+
+	int xR, yR;
+	int xP, yP;
+	int yC=-10, wC=20, hC=20;
+	int frame_red = 0, frame_pink = 0;
+	int estado_atual_redGhost, estado_atual_pinkGhost;
+	bool alcancou_topo = false, alcancou_fundo=false;
+	int posX_red=100, posY_red=100; //posição red ghost
+	int posX_pink=400, posY_pink=350; //posição pink ghost
     
     SDL_Rect r_personagem = {60, 63, 30, 30};
     SDL_Rect c_personagem;    
@@ -163,6 +175,13 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
     	
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
    		SDL_RenderClear(ren);
+   		
+        SDL_Rect r_red_ghost = { posX_red,posY_red, 30,30 };
+        SDL_Rect c_red_ghost;
+
+		SDL_Rect r_pink_ghost = { posX_pink,posY_pink, 30,30 };
+        SDL_Rect c_pink_ghost;
+
 
 		SDL_SetRenderDrawColor(ren, 0,0,250,0);
 		SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
@@ -173,7 +192,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 		walls[4] = (SDL_Rect) {220, 210, 30,100};
 		walls[5] = (SDL_Rect) {180, 240, 100,30};
 		walls[6] = (SDL_Rect) {160, 50, 150, 30};
-		walls[7] = (SDL_Rect) {160, 450, 150, 30};
+		walls[7] = (SDL_Rect) {160, 420, 150, 30};
 		
         switch (evt.type) {
 				case SDL_QUIT:
@@ -290,12 +309,103 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 					break;
 			}
 			
+			//ESTADOS RED GHOST
+			switch(estado_atual_redGhost){
+				//vermelho_cima
+				case PARA_CIMA:
+					posY_red -= 5;
+					frame_red += 1;
+					if(frame_red == 1){
+						xR = 4; yR = 85;
+					}else{
+						xR = 24; yR = 85;
+						frame_red=0;
+					}
+					c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
+				break;
+				
+				//vemelho_baixo
+				case PARA_BAIXO:
+					posY_red += 5;
+					frame_red += 1;
+					if(frame_red == 1){
+						xR = 44; yR = 85;
+					}else{
+						xR = 64; yR = 85;
+						frame_red=0;
+					}
+					c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
+				break;
+			}
+			
+			//ESTADOS PINK GHOST
+			switch(estado_atual_pinkGhost){
+				//rosa_cima
+				case PARA_CIMA: 
+					frame_pink += 1;
+					posY_pink -= 5;
+					if(frame_pink == 1){
+						xP = 4; yP = 105;
+					}else{
+						xP = 24; yP = 105;
+						frame_pink =0;
+					}
+					c_pink_ghost = (SDL_Rect) { xP,yP, wC,hC };
+				break;
+				
+				//rosa_baixo
+				case PARA_BAIXO:
+
+					posY_pink += 5;
+					frame_pink += 1;
+					if(frame_pink == 1){
+						xP = 44; yP = 105;
+					}else{
+						xP = 64; yP = 105;
+						frame_pink=0;
+					}
+					c_pink_ghost = (SDL_Rect) { xP,yP, wC,hC };
+				break;
+			}
+
+			//MOVIMENTAÇÃO VERTICAL RED GHOST
+				if(posY_red <= 365 && posY_red >= 50 && !alcancou_topo){
+					estado_atual_redGhost = PARA_CIMA;
+					if(posY_red == 50)
+						alcancou_topo = true;
+				}else if(alcancou_topo){
+					estado_atual_redGhost = PARA_BAIXO;
+					if(posY_red >= 350)
+						alcancou_topo = false;
+						//printf("alcançou fundo\n");
+				}
+				
+				//MOVIMENTAÇÃO VERTICAL PINK GHOST
+				if(posY_pink >= 40 && posY_pink <= 350 && !alcancou_fundo){
+					estado_atual_pinkGhost = PARA_BAIXO;
+					if(posY_pink == 350){
+						alcancou_fundo = true;
+						//printf("alcançou fundo\n");
+					}
+				}else if(alcancou_fundo){
+					estado_atual_pinkGhost = PARA_CIMA;
+					if(posY_pink <= 50){
+						alcancou_fundo = false;
+						//printf("alcançou topo\n");
+					}
+				}
+			
+			SDL_RenderCopy(ren, sprite, &c_red_ghost, &r_red_ghost);
+			SDL_RenderCopy(ren, sprite, &c_pink_ghost, &r_pink_ghost);
+			SDL_RenderPresent(ren);
 				
 			if(!ready){
 				c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
 			}
 			SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
 					
+				
+				
 			for (i=0; i<8; i++)
 				SDL_RenderFillRect(ren, &walls[i]);
 
