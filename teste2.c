@@ -66,6 +66,8 @@ int main (int argc, char* args[])
 		int posicao_y = 1;
 		int estado_atual_p = PARADO;
 		
+		SDL_Rect r_personagem = {60, 63, 30, 30};
+		SDL_Rect c_personagem;    
 
 		int xR, yR;
 		int xP, yP;
@@ -73,11 +75,12 @@ int main (int argc, char* args[])
 		int frame_red = 0, frame_pink = 0;
 		int estado_atual_redGhost, estado_atual_pinkGhost;
 		bool alcancou_topo = false, alcancou_fundo=false;
-		int posX_red=100, posY_red=100; //posição red ghost
-		int posX_pink=400, posY_pink=350; //posição pink ghost
+		int posX_red=70, posY_red=100; //posição red ghost
+		int posX_pink=380, posY_pink=350; //posição pink ghost
 		
-		SDL_Rect r_personagem = {60, 63, 30, 30};
-		SDL_Rect c_personagem;    
+		
+		
+		
 		
 		while (continua) {
 			
@@ -85,11 +88,15 @@ int main (int argc, char* args[])
 	   		SDL_RenderClear(ren);
 	   		
 		    SDL_Rect r_red_ghost = { posX_red,posY_red, 30,30 };
-		    SDL_Rect c_red_ghost;
+			SDL_Rect c_red_ghost;
+			
 
 			SDL_Rect r_pink_ghost = { posX_pink,posY_pink, 30,30 };
-		    SDL_Rect c_pink_ghost;
+			SDL_Rect c_pink_ghost;
 
+
+			SDL_Rect r_coin = { 50,50, 10,10 };
+			SDL_Rect c_coin;
 
 			SDL_SetRenderDrawColor(ren, 0,0,250,0);
 			SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
@@ -285,7 +292,7 @@ int main (int argc, char* args[])
 					estado_atual_redGhost = PARA_BAIXO;
 					if(posY_red >= 350)
 						alcancou_topo = false;
-						printf("alcançou fundo\n");
+						//printf("alcançou fundo\n");
 				}
 				
 				//MOVIMENTAÇÃO VERTICAL PINK GHOST
@@ -312,7 +319,9 @@ int main (int argc, char* args[])
 				}
 				SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
 						
-					
+				c_coin = (SDL_Rect) { 5,185, 10,10 };	
+				
+				SDL_RenderCopy(ren, sprite, &c_coin, &r_coin);
 					
 				for (i=0; i<8; i++)
 					SDL_RenderFillRect(ren, &walls[i]);
