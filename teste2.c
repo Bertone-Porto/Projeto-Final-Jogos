@@ -8,7 +8,20 @@
 #include <SDL2/SDL_ttf.h>
 
 enum Personagem{PARADO, MOVER_ESQUERDA, MOVER_DIREITA, MOVER_CIMA, MOVER_BAIXO};
-enum Estado_Ghost{PARA_BAIXO, PARA_CIMA, PARA_DIREITA, PARA_ESQUERDA};
+enum Vida {VIVO, MORTO};
+enum Estado_Ghost{COLIDIDO, PARA_BAIXO, PARA_CIMA, PARA_DIREITA, PARA_ESQUERDA};
+
+struct dadosPlayer{
+
+};
+
+struct dadosGhost{
+
+};
+
+struct dadosCoin{
+
+};
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -35,6 +48,16 @@ int Tem_Contato (SDL_Rect * r1, SDL_Rect * col) {
 		if (SDL_HasIntersection(&temp, &col[i])) return 1;
 	} return 0; 
 }
+
+bool Contato_Ghost (SDL_Rect * r1, SDL_Rect * r2){
+	int i; SDL_Rect temp;
+
+	if(SDL_HasIntersection(r1, r2)){
+		return true;
+	} return false;
+
+}
+
 
 int main (int argc, char* args[])
 {
@@ -64,7 +87,9 @@ int main (int argc, char* args[])
 		bool ready = false;
 		int posicao_x = 1;
 		int posicao_y = 1;
+
 		int estado_atual_p = PARADO;
+		int estado_p = VIVO;
 		
 		SDL_Rect r_personagem = {60, 63, 30, 30};
 		SDL_Rect c_personagem;    
@@ -73,12 +98,10 @@ int main (int argc, char* args[])
 		int xP, yP;
 		int yC=-10, wC=20, hC=20;
 		int frame_red = 0, frame_pink = 0;
-		int estado_atual_redGhost, estado_atual_pinkGhost;
+		int estado_atual_redGhost = PARA_CIMA, estado_atual_pinkGhost=PARA_CIMA;
 		bool alcancou_topo = false, alcancou_fundo=false;
-		int posX_red=70, posY_red=100; //posição red ghost
-		int posX_pink=380, posY_pink=350; //posição pink ghost
-		
-		
+		int posX_red=100, posY_red=100; //posição red ghost
+		int posX_pink=400, posY_pink=350; //posição pink ghost
 		
 		
 		
@@ -101,7 +124,7 @@ int main (int argc, char* args[])
 			SDL_SetRenderDrawColor(ren, 0,0,250,0);
 			SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
 			walls[0] = (SDL_Rect) {0, 0, 30,80};
-			walls[1] = (SDL_Rect) {470, 0, 30,80};	
+			walls[1] = (SDL_Rect) {470, 0, 30,80};
 			walls[2] = (SDL_Rect) {0, 420, 30,80};
 			walls[3] = (SDL_Rect) {470, 420, 30,80};
 			walls[4] = (SDL_Rect) {220, 210, 30,100};
@@ -146,10 +169,13 @@ int main (int argc, char* args[])
 			} else{   
 				
 				switch(estado_atual_p){
+					case PARADO:
+						c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
+						break;
 					case MOVER_CIMA: //para cima
-						if(!Tem_Contato(&r_personagem, walls)){
+						if(!Tem_Contato(&r_personagem, walls) && estado_p == VIVO){
 							c_personagem = (SDL_Rect) {x, y, 20, 20}; 
-							r_personagem.y -= 5;
+							r_personagem.y -= 7;
 							ready = true;
 							boca++;
 							if(boca % 2 == 0){
@@ -160,15 +186,20 @@ int main (int argc, char* args[])
 							if(boca > 11){
 								boca=0;
 							}
+							if(Contato_Ghost(&r_personagem, &r_red_ghost) || Contato_Ghost(&r_personagem, &r_pink_ghost)){
+								estado_p = MORTO;
+								estado_atual_redGhost = COLIDIDO;
+								estado_atual_pinkGhost = COLIDIDO;
+							}
 						}else{
 							r_personagem.y +=5;
-							estado_atual_p = MOVER_BAIXO;
+							estado_p = MOVER_BAIXO;
 						}
 						break;
 					case MOVER_BAIXO: //para baixo
-						if(!Tem_Contato(&r_personagem, walls)){
+						if(!Tem_Contato(&r_personagem, walls) && estado_p == VIVO){
 							c_personagem = (SDL_Rect) {x, y, 20, 20}; 
-							r_personagem.y += 5;
+							r_personagem.y += 7;
 							ready = true;
 							boca++;
 							if(boca % 2 == 0){
@@ -179,15 +210,20 @@ int main (int argc, char* args[])
 							if(boca > 11){
 								boca=0;
 							}
+							if(Contato_Ghost(&r_personagem, &r_red_ghost) || Contato_Ghost(&r_personagem, &r_pink_ghost)){
+								estado_p = MORTO;
+								estado_atual_redGhost = COLIDIDO;
+								estado_atual_pinkGhost = COLIDIDO;
+							}
 						}else{
 							r_personagem.y -=5;
 							estado_atual_p = MOVER_CIMA;
 						}
 						break;
 					case MOVER_ESQUERDA: //para esquerda
-						if(!Tem_Contato(&r_personagem, walls)){
+						if(!Tem_Contato(&r_personagem, walls) && estado_p == VIVO){
 							c_personagem = (SDL_Rect) {x, y, 20, 20}; 
-							r_personagem.x -= 5;
+							r_personagem.x -= 7;
 							ready = true;
 							boca++;
 							if(boca % 2 == 0){
@@ -198,15 +234,20 @@ int main (int argc, char* args[])
 							if(boca > 11){
 								boca=0;
 							}
+							if(Contato_Ghost(&r_personagem, &r_red_ghost) || Contato_Ghost(&r_personagem, &r_pink_ghost)){
+								estado_p = MORTO;
+								estado_atual_redGhost = COLIDIDO;
+								estado_atual_pinkGhost = COLIDIDO;
+							}
 						}else{
 							r_personagem.x +=5;
 							estado_atual_p = MOVER_DIREITA;
 						}
 						break;
 					case MOVER_DIREITA: //para direita
-						if(!Tem_Contato(&r_personagem, walls)){
+						if(!Tem_Contato(&r_personagem, walls) && estado_p == VIVO){
 							c_personagem = (SDL_Rect) {x, y, 20, 20}; 
-							r_personagem.x += 5;
+							r_personagem.x += 7;
 							ready = true;
 							boca++;
 							if(boca % 2 == 0){
@@ -217,11 +258,63 @@ int main (int argc, char* args[])
 							if(boca > 11){
 								boca=0;
 							}
+							if(Contato_Ghost(&r_personagem, &r_red_ghost) || Contato_Ghost(&r_personagem, &r_pink_ghost)){
+								estado_p = MORTO;
+								estado_atual_redGhost = COLIDIDO;
+								estado_atual_pinkGhost = COLIDIDO;
+							}
 						}else{
 							r_personagem.x -= 5;
 							estado_atual_p = MOVER_ESQUERDA;
 						}
 						break;
+					
+				}
+				if(estado_p == MORTO){
+					switch(isup){
+						case 1:
+							c_personagem = (SDL_Rect) { 3, 245, 20,20 };
+							break;
+						case 2:
+							c_personagem = (SDL_Rect) { 23, 245, 20,20 };
+							break;
+						case 3:
+							c_personagem = (SDL_Rect) { 43, 245, 20,20 };
+							break;
+						case 4:
+							c_personagem = (SDL_Rect) { 63, 245, 20,20 };
+							break;
+						case 5:
+							c_personagem = (SDL_Rect) { 83, 245, 20,20 };
+							break;
+						case 6:
+							c_personagem = (SDL_Rect) { 103, 245, 20,20 };
+							break;
+						case 7:
+							c_personagem = (SDL_Rect) { 123, 245, 20,20 };
+							break;
+						case 8:
+							c_personagem = (SDL_Rect) { 143, 245, 20,20 };
+							break;
+						case 9:
+							c_personagem = (SDL_Rect) { 163, 245, 20,20 };
+							break;
+						case 10:
+							c_personagem = (SDL_Rect) { 183, 245, 20,20 };
+							break;
+						case 11:
+							c_personagem = (SDL_Rect) { 203, 245, 20,20 };
+							break;
+					}
+					isup++;
+					if(isup > 11){
+						estado_p = VIVO;
+						isup = 1;
+						r_personagem.x = 60;
+						r_personagem.y = 63;
+						estado_atual_redGhost = PARA_CIMA;
+						estado_atual_pinkGhost = PARA_BAIXO;
+					}
 				}
 				
 				//ESTADOS RED GHOST
@@ -238,7 +331,7 @@ int main (int argc, char* args[])
 						}
 						c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
 					break;
-					
+				
 					//vemelho_baixo
 					case PARA_BAIXO:
 						posY_red += 5;
@@ -251,8 +344,8 @@ int main (int argc, char* args[])
 						}
 						c_red_ghost = (SDL_Rect) { xR, yR, wC,hC };
 					break;
-				}
-				
+					}
+			
 				//ESTADOS PINK GHOST
 				switch(estado_atual_pinkGhost){
 					//rosa_cima
@@ -267,7 +360,7 @@ int main (int argc, char* args[])
 						}
 						c_pink_ghost = (SDL_Rect) { xP,yP, wC,hC };
 					break;
-					
+				
 					//rosa_baixo
 					case PARA_BAIXO:
 
@@ -281,10 +374,10 @@ int main (int argc, char* args[])
 						}
 						c_pink_ghost = (SDL_Rect) { xP,yP, wC,hC };
 					break;
-				}
+			}
 
 				//MOVIMENTAÇÃO VERTICAL RED GHOST
-				if(posY_red <= 365 && posY_red >= 50 && !alcancou_topo){
+				if(posY_red <= 365 && posY_red >= 50 && !alcancou_topo && estado_atual_redGhost != COLIDIDO){
 					estado_atual_redGhost = PARA_CIMA;
 					if(posY_red == 50)
 						alcancou_topo = true;
@@ -296,7 +389,7 @@ int main (int argc, char* args[])
 				}
 				
 				//MOVIMENTAÇÃO VERTICAL PINK GHOST
-				if(posY_pink >= 40 && posY_pink <= 350 && !alcancou_fundo){
+				if(posY_pink >= 40 && posY_pink <= 350 && !alcancou_fundo && estado_atual_pinkGhost != COLIDIDO){
 					estado_atual_pinkGhost = PARA_BAIXO;
 					if(posY_pink == 350){
 						alcancou_fundo = true;
@@ -314,14 +407,12 @@ int main (int argc, char* args[])
 				SDL_RenderCopy(ren, sprite, &c_pink_ghost, &r_pink_ghost);
 				SDL_RenderPresent(ren);
 					
-				if(!ready){
-					c_personagem = (SDL_Rect) {0, 0, 20, 20}; 
-				}
+				
 				SDL_RenderCopy(ren, sprite, &c_personagem, &r_personagem); //player
 						
-				c_coin = (SDL_Rect) { 5,185, 10,10 };	
+				//c_coin = (SDL_Rect) { 5,185, 10,10 };	
 				
-				SDL_RenderCopy(ren, sprite, &c_coin, &r_coin);
+				//SDL_RenderCopy(ren, sprite, &c_coin, &r_coin);
 					
 				for (i=0; i<8; i++)
 					SDL_RenderFillRect(ren, &walls[i]);
