@@ -25,20 +25,9 @@ struct dadosGhost{
 	int lifeState;
 };
 
-/*struct dadosRedGhost{
-	SDL_Rect red_r;
-	SDL_Rect red_c;
-	int state;
-};
-
-struct dadosPinkGhost{
-	SDL_Rect pink_r;
-	SDL_Rect p_c;
-	int state;
-};*/
-
-struct dadosCoin{
-
+struct Coin{
+	SDL_Rect r;
+	SDL_Rect c;
 };
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
@@ -148,12 +137,9 @@ int main (int argc, char* args[])
 	   			pink.state = PARA_CIMA;
 	   		}
 	   		
-
-
-
-			SDL_Rect r_coin = { 50,50, 10,10 };
-			SDL_Rect c_coin;
-
+			
+			
+			//PAREDES
 			SDL_SetRenderDrawColor(ren, 0,0,250,0);
 			SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
 			walls[0] = (SDL_Rect) {0, 0, 30,80};
@@ -165,6 +151,16 @@ int main (int argc, char* args[])
 			walls[6] = (SDL_Rect) {160, 50, 150, 30};
 			walls[7] = (SDL_Rect) {160, 450, 150, 30};
 			
+
+			//MOEDAS
+			struct SDL_Rect * c_coin;
+
+			struct Coin * moedas[10];
+
+			for(i=0;i<10;i++){
+				moedas[i].r = (SDL_Rect) {(random()%500)*i, (random()%500)*i, 10, 10};
+			}
+
 		    switch (evt.type) {
 					case SDL_QUIT:
 						continua = false;
@@ -445,11 +441,13 @@ int main (int argc, char* args[])
 						
 				//c_coin = (SDL_Rect) { 5,185, 10,10 };	
 				
-				//SDL_RenderCopy(ren, sprite, &c_coin, &r_coin);
-					
-				for (i=0; i<8; i++)
-					SDL_RenderFillRect(ren, &walls[i]);
+				/*for(i=0;i<10;i++){
+					SDL_RenderCopy(ren, sprite, &c_coin, &moedas[i]);
+				}*/
 
+				for (i=0; i<8; i++){
+					SDL_RenderFillRect(ren, &walls[i]);
+				}
 				SDL_RenderPresent(ren);
 				started=true;
 				espera = 150;
