@@ -4,6 +4,7 @@
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL2/SDL_ttf.h>
 
 enum Estado_Ghost{PARA_BAIXO, PARA_CIMA, PARA_DIREITA, PARA_ESQUERDA};
@@ -64,24 +65,12 @@ int main (int argc, char* args[])
 		//MOEDAS
 		struct Coin coins;
 		
-		
 		SDL_Rect c_coin = (SDL_Rect) { 5,185, 10,10 };
 		
 		struct Coin * moedas = (struct Coin *) malloc(sizeof(struct Coin)*15);
-		//struct Coin moedas[15];
-
 		for(i=0;i<15;i++){
 			moedas[i].r = (SDL_Rect) {(30)*i, 30, 10, 10};
-			if(i+1 == 16){
-				moedas[i].prox = NULL;
-			}else{
-				moedas[i].prox = &moedas[i+1];
-			}
-			if(i-1 == 0){
-				moedas[i].ant = NULL;
-			}else{
-				moedas[i].ant = &moedas[i-1];
-			}
+			moedas[i].c = (SDL_Rect) { 5,185, 10,10 };
 		}
 
       	Uint32 antes = SDL_GetTicks();
@@ -97,11 +86,10 @@ int main (int argc, char* args[])
 	else{   		
 		//c_coin = (SDL_Rect) { 5,185, 10,10 };	
 		for(i=3;i<15;i++){
-			SDL_RenderCopy(ren, sprite, &c_coin, &moedas[i].r);
-			if(moedas[i].ant == NULL)
-				printf("ant == null\n");
-			if(moedas[i].prox == NULL) printf("prox == null\n");
+			SDL_RenderCopy(ren, sprite, &moedas[i].c, &moedas[i].r);
 		}
+		
+
 				
 		//for (i=0; i<8; i++)
 		//	SDL_RenderFillRect(ren, &walls[i]);
@@ -119,4 +107,3 @@ int main (int argc, char* args[])
     SDL_DestroyWindow(win);
     SDL_Quit();
 }
-
