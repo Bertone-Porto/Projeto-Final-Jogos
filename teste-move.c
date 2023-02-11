@@ -169,11 +169,13 @@ int main (int argc, char* args[])
 		
 		
 		//MOEDAS
+		struct Coin coins;
 		SDL_Rect c_coin = (SDL_Rect) { 5,185, 10,10 };
-		SDL_Rect * moedas = (SDL_Rect *) malloc(sizeof(SDL_Rect)*15);
-
-		for(i=0;i<15;i++){
-			moedas[i] = (SDL_Rect) {(30)*i, 30, 10, 10};
+		struct Coin * moedas = (struct Coin *) malloc(sizeof(struct Coin)*15);
+		for(i=1;i<15;i++){
+			moedas[i].r = (SDL_Rect) {(30)*i, 30, 10, 10};
+			moedas[i].c = (SDL_Rect) { 5,185, 10,10 };
+			if(!started) moedas[i].comido = false;
 		}
 		
 		/*
@@ -185,8 +187,6 @@ int main (int argc, char* args[])
 				moedas[i].comido = false;
 			}
 		}*/
-
-		
 
 		SDL_SetRenderDrawColor(ren, 0,0,250,0);
 		SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
@@ -255,10 +255,10 @@ int main (int argc, char* args[])
 								boca=0;
 							}
 							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, moedas)){
-									&moedas[i] = NULL;
-									//moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									//moedas[i].comido = true;
+								if(Contato_Coin(&p.r, &moedas[i].r)){
+
+									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
+									moedas[i].comido = true;
 								}
 							}
 							
@@ -295,10 +295,10 @@ int main (int argc, char* args[])
 							}
 							
 							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, moedas)){
-									moedas[i] = NULL;
-									//moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									//moedas[i].comido = true;
+								if(Contato_Coin(&p.r, &moedas[i].r)){
+
+									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
+									moedas[i].comido = true;
 								}
 							}
 							
@@ -334,10 +334,10 @@ int main (int argc, char* args[])
 							}
 							
 							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, moedas)){
-									moedas[i] = NULL;
-									//moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									//moedas[i].comido = true;
+								if(Contato_Coin(&p.r, &moedas[i].r)){
+
+									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
+									moedas[i].comido = true;
 
 								}
 							}
@@ -375,10 +375,10 @@ int main (int argc, char* args[])
 							}
 							
 							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, moedas)){
-									moedas[i] = NULL;
-									//moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									//moedas[i].comido = true;
+								if(Contato_Coin(&p.r, &moedas[i].r)){
+
+									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
+									moedas[i].comido = true;
 
 								}
 							}
@@ -540,16 +540,6 @@ int main (int argc, char* args[])
 				}
 			}
 			
-			for(i=1;i<15;i++){
-				if(moedas[i].comido){ 
-					count++; 
-					printf("comeu\n");
-				}
-				
-				if(count == 15) continua = false;
-			}
-			
-			
 			SDL_RenderCopy(ren, sprite, &red.c, &red.r);
 			SDL_RenderCopy(ren, sprite, &pink.c, &pink.r);
 			SDL_RenderPresent(ren);
@@ -564,13 +554,28 @@ int main (int argc, char* args[])
 			}*/
 			
 			for(i=3;i<15;i++){
-				SDL_RenderCopy(ren, sprite, &c_coin, &moedas[i]);
+				if(!(&moedas->comido)){
+					SDL_RenderCopy(ren, sprite, &moedas[i].c, &moedas[i].r);
+				}
 			}
 				
 			for (i=0; i<8; i++) //walls
 				SDL_RenderFillRect(ren, &walls[i]);
 
 			SDL_RenderPresent(ren);
+			started=true;
+			espera = 150;
+			
+		}
+	}
+
+
+    /* FINALIZACAO */
+    SDL_DestroyRenderer(ren);
+    SDL_DestroyWindow(win);
+    SDL_Quit();
+}
+
 			started=true;
 			espera = 150;
 			
