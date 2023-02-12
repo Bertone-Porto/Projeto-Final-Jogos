@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL_ttf.h>
-
+#include <math.h>
 enum Estado_Ghost{PARA_BAIXO, PARA_CIMA, PARA_DIREITA, PARA_ESQUERDA};
 struct Coin{
 	SDL_Rect r;
@@ -15,6 +15,10 @@ struct Coin{
 	struct Coin* ant;
 };
 
+struct Fruta{
+	SDL_Rect r;
+	SDL_Rect c;
+};
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -47,7 +51,7 @@ int main (int argc, char* args[])
     /* EXECUÇÃO */
     bool continua = true;
     SDL_Event evt;
-    int isup = 1;
+    int isup = 0;
     int x = 50, y=130;
 	int xR, yR;
 	int xP, yP;
@@ -55,24 +59,17 @@ int main (int argc, char* args[])
     int espera = 50;
     int yC=-10, wC=10, hC=10;
     int i;
+	//frutas
+	struct Fruta * frutas = (struct Fruta *) malloc(sizeof(struct Fruta)*4);
+	frutas[0].c = (SDL_Rect) {165,158,25,25}; frutas[0].r = (SDL_Rect) {random()%200,random()%100,38,38};
+	frutas[1].c = (SDL_Rect) {165,180,25,25}; frutas[1].r = (SDL_Rect) {random()%300,random()%250,38,38};
+	frutas[2].c = (SDL_Rect) {165,200,25,25}; frutas[2].r = (SDL_Rect) {random()%400,random()%300,38,38};
+	frutas[3].c = (SDL_Rect) {165,220,25,25}; frutas[3].r = (SDL_Rect) {random()%100,random()%300,38,38};
 
     while (continua) {
         SDL_SetRenderDrawColor(ren, 0,0,0,0);
         SDL_RenderClear(ren);
-		//SDL_Rect * coins = (SDL_Rect *) malloc(sizeof(SDL_Rect)*20);
-
-
-		//MOEDAS
-		struct Coin coins;
 		
-		SDL_Rect c_coin = (SDL_Rect) { 5,185, 10,10 };
-		
-		struct Coin * moedas = (struct Coin *) malloc(sizeof(struct Coin)*15);
-		for(i=0;i<15;i++){
-			moedas[i].r = (SDL_Rect) {(30)*i, 30, 10, 10};
-			moedas[i].c = (SDL_Rect) { 5,185, 10,10 };
-		}
-
       	Uint32 antes = SDL_GetTicks();
         int isevt = AUX_WaitEventTimeoutCount(&evt,&espera);       
         if(isevt){       	
@@ -84,20 +81,17 @@ int main (int argc, char* args[])
 		//nada
 	}
 	else{   		
-		//c_coin = (SDL_Rect) { 5,185, 10,10 };	
-		for(i=3;i<15;i++){
-			SDL_RenderCopy(ren, sprite, &moedas[i].c, &moedas[i].r);
+		int kk = random()%4;
+		printf("valor: %d\n", kk);
+		//SDL_RenderFillRect(ren, &walls[i]);
+		for(i=0;i<4;i++){
+			SDL_RenderCopy(ren, sprite, &frutas[i].c, &frutas[i].r);
 		}
-		
 
-				
-		//for (i=0; i<8; i++)
-		//	SDL_RenderFillRect(ren, &walls[i]);
-		//SDL_RenderCopy(ren, sprite, &pink.c, &pink.r);
 		SDL_RenderPresent(ren);
 		espera = 50;
 
-		
+		isup++;
 		}
     }
 
