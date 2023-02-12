@@ -24,7 +24,7 @@ struct dadosPlayer{
 	int moveState;
 	int lifeState;
 	int state;
-	int powerState;
+	bool powerState;
 	int vidas;
 };
 
@@ -42,7 +42,15 @@ struct Coin{
 	SDL_Rect r;
 	SDL_Rect c;
 	bool comido;
+	bool contado;
 };
+
+struct Fruta{
+	SDL_Rect r;
+	SDL_Rect c;
+	bool aparece;
+};
+
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -85,9 +93,14 @@ bool Contato_Coin (SDL_Rect * r1, SDL_Rect * r2){
 	if(SDL_HasIntersection(r1, r2)){
 		return true;
 	} return false;
-
 }
 
+bool Contato_Fruta (SDL_Rect * r1, SDL_Rect * r2){
+	if(SDL_HasIntersection(r1, r2)){
+		return true;
+	} return false;
+
+}
 
 int main (int argc, char* args[])
 {
@@ -117,12 +130,13 @@ int main (int argc, char* args[])
 	//bool ready = false;
 	int posicao_x = 1;
 	int posicao_y = 1;
+	int conta_tempo1 = 0, conta_tempo2, fruta_aleatoria;
 
 	//int estado_atual_p = PARADO;
 	//int estado_p = ALIVE;
 	
 	struct dadosPlayer p;
-	p.r = (SDL_Rect) {60,63,30,30};
+	p.r = (SDL_Rect) {150,200,30,30};
 	p.state = PARADO;
 	p.lifeState = ALIVE;
 	p.powerState = SEM_PODER;
@@ -137,11 +151,48 @@ int main (int argc, char* args[])
 
 	bool alcancou_topo = false, alcancou_fundo=false;
 	bool started = false;
-	int posX_red=100, posY_red=100; //posição red ghost
+	int posX_red=60, posY_red=100; //posição red ghost
 	int posX_pink=400, posY_pink=350; //posição pink ghost
 	int count = 0;
+	int totalComidos = 0;
 	
 	
+	struct Coin * fileira_moedas1 = (struct Coin *) malloc(sizeof(struct Coin)*13);
+	struct Coin * fileira_moedas2 = (struct Coin *) malloc(sizeof(struct Coin)*13);
+	struct Coin * fileira_moedas3 = (struct Coin *) malloc(sizeof(struct Coin)*13);
+	struct Coin * fileira_moedas4 = (struct Coin *) malloc(sizeof(struct Coin)*13);
+	for(i=3;i<13;i++){
+		//fileira_moedas1 parte de cima
+		fileira_moedas1[i].r = (SDL_Rect) {(30)*i, 30, 10, 10};
+		fileira_moedas1[i].c = (SDL_Rect) { 5,185, 10,10 };
+		fileira_moedas1[i].contado = false;
+		if(!started) fileira_moedas1[i].comido = false;
+		
+		//fileira_moedas2 parte de cima
+		fileira_moedas2[i].r = (SDL_Rect) {(30)*i, 430, 10, 10};
+		fileira_moedas2[i].c = (SDL_Rect) { 5,185, 10,10 };
+		fileira_moedas2[i].contado = false;
+		if(!started) fileira_moedas2[i].comido = false;
+		
+		//fileira_moedas3 parte de cima
+		fileira_moedas3[i].r = (SDL_Rect) {45, 30*i, 10, 10};
+		fileira_moedas3[i].c = (SDL_Rect) { 5,185, 10,10 };
+		fileira_moedas3[i].contado = false;
+		if(!started) fileira_moedas3[i].comido = false;
+		
+		//fileira_moedas4 parte de cima
+		fileira_moedas4[i].r = (SDL_Rect) {430, 30*i, 10, 10};
+		fileira_moedas4[i].c = (SDL_Rect) { 5,185, 10,10 };
+		fileira_moedas4[i].contado = false;
+		if(!started) fileira_moedas4[i].comido = false;	
+	}
+	
+	//frutas
+	struct Fruta * frutas = (struct Fruta *) malloc(sizeof(struct Fruta)*4);
+	frutas[0].c = (SDL_Rect) {165,158,25,25}; frutas[0].r = (SDL_Rect) {150,100,38,38}; frutas[0].aparece = false;
+	frutas[1].c = (SDL_Rect) {165,180,25,25}; frutas[1].r = (SDL_Rect) {300,250,38,38}; frutas[1].aparece = false;
+	frutas[2].c = (SDL_Rect) {165,200,25,25}; frutas[2].r = (SDL_Rect) {450,300,38,38}; frutas[2].aparece = false;
+	frutas[3].c = (SDL_Rect) {165,220,25,25}; frutas[3].r = (SDL_Rect) {100,300,38,38}; frutas[3].aparece = false;
 	
 	while (continua) {
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
@@ -151,8 +202,6 @@ int main (int argc, char* args[])
    		red.r = (SDL_Rect) {posX_red,posY_red, 30,30};
    		red.lifeState = ALIVE;
    		
-   		
-	
 		struct dadosGhost pink;
 		pink.r = (SDL_Rect) { posX_pink,posY_pink, 30,30 };
 		pink.lifeState = ALIVE;
@@ -161,32 +210,7 @@ int main (int argc, char* args[])
    			red.state = MOVER_CIMA;
    			pink.state = MOVER_CIMA;
    		}
-   		
 
-
-		//SDL_Rect r_coin = { 50,50, 10,10 };
-		//SDL_Rect c_coin[10];
-		
-		
-		//MOEDAS
-		struct Coin coins;
-		SDL_Rect c_coin = (SDL_Rect) { 5,185, 10,10 };
-		struct Coin * moedas = (struct Coin *) malloc(sizeof(struct Coin)*15);
-		for(i=1;i<15;i++){
-			moedas[i].r = (SDL_Rect) {(30)*i, 30, 10, 10};
-			moedas[i].c = (SDL_Rect) { 5,185, 10,10 };
-			if(!started) moedas[i].comido = false;
-		}
-		
-		/*
-		struct Coin moedas[15];
-		for(i=0;i<15;i++){
-			moedas[i].r = (SDL_Rect) {(30)*i, 25, 10, 10};
-			moedas[i].c = (SDL_Rect) { 5,185, 10,10 };
-			if(!started){
-				moedas[i].comido = false;
-			}
-		}*/
 
 		SDL_SetRenderDrawColor(ren, 0,0,250,0);
 		SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
@@ -244,7 +268,6 @@ int main (int argc, char* args[])
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
 							p.r.y -= 7;
-							//ready = true;
 							boca++;
 							if(boca % 2 == 0){
 								x=0; y=40;
@@ -254,15 +277,27 @@ int main (int argc, char* args[])
 							if(boca > 11){
 								boca=0;
 							}
-							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, &moedas[i].r)){
-
-									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									moedas[i].comido = true;
+							//CONTATO COM MOEDAS
+							for(i=3;i<13;i++){
+								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
+									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas1[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas2[i].r)){
+									fileira_moedas2[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas2[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas3[i].r)){
+									fileira_moedas3[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas3[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas4[i].r)){
+									fileira_moedas4[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas4[i].comido = true;
 								}
 							}
 							
-							
+							//CONTATO COM FANTASMAS
 							if(Contato_Ghost(&p.r, &red.r) || Contato_Ghost(&p.r, &pink.r)){
 								if(p.powerState == SEM_PODER){
 									p.lifeState = DEAD;
@@ -274,16 +309,24 @@ int main (int argc, char* args[])
 									pink.lifeState = MORTO;
 								}
 							}
+							
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = true;							
+								}
+							}
 						}else{
 							p.r.y +=5;
 							p.moveState = MOVER_BAIXO;
 						}
 						break;
+						
 					case MOVER_BAIXO: //para baixo
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
 							p.r.y += 7;
-							//ready = true;
 							boca++;
 							if(boca % 2 == 0){
 								x=0; y=60;
@@ -294,11 +337,22 @@ int main (int argc, char* args[])
 								boca=0;
 							}
 							
-							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, &moedas[i].r)){
-
-									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									moedas[i].comido = true;
+							for(i=3;i<13;i++){
+								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
+									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas1[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas2[i].r)){
+									fileira_moedas2[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas2[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas3[i].r)){
+									fileira_moedas3[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas3[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas4[i].r)){
+									fileira_moedas4[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas4[i].comido = true;
 								}
 							}
 							
@@ -313,16 +367,23 @@ int main (int argc, char* args[])
 									pink.lifeState = MORTO;
 								}
 							}
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = true;							
+								}
+							}
 						}else{
 							p.r.y -=5;
 							p.moveState = MOVER_CIMA;
 						}
 						break;
+						
 					case MOVER_ESQUERDA: //para esquerda
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
 							p.r.x -= 7;
-							//ready = true;
 							boca++;
 							if(boca % 2 == 0){
 								x=0; y=0;
@@ -333,12 +394,22 @@ int main (int argc, char* args[])
 								boca=0;
 							}
 							
-							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, &moedas[i].r)){
-
-									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									moedas[i].comido = true;
-
+							for(i=3;i<13;i++){
+								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
+									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas1[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas2[i].r)){
+									fileira_moedas2[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas2[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas3[i].r)){
+									fileira_moedas3[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas3[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas4[i].r)){
+									fileira_moedas4[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas4[i].comido = true;
 								}
 							}
 							
@@ -354,16 +425,23 @@ int main (int argc, char* args[])
 
 								}
 							}
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = true;							
+								}
+							}
 						}else{
 							p.r.x +=5;
 							p.moveState = MOVER_DIREITA;
 						}
 						break;
+						
 					case MOVER_DIREITA: //para direita
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
 							p.r.x += 7;
-							//ready = true;
 							boca++;
 							if(boca % 2 == 0){
 								x=0; y=20;
@@ -374,12 +452,22 @@ int main (int argc, char* args[])
 								boca=0;
 							}
 							
-							for(i=3;i<15;i++){
-								if(Contato_Coin(&p.r, &moedas[i].r)){
-
-									moedas[i].c = (SDL_Rect) { 0,0, 0,0 };
-									moedas[i].comido = true;
-
+							for(i=3;i<13;i++){
+								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
+									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas1[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas2[i].r)){
+									fileira_moedas2[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas2[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas3[i].r)){
+									fileira_moedas3[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas3[i].comido = true;
+								}
+								if(Contato_Coin(&p.r, &fileira_moedas4[i].r)){
+									fileira_moedas4[i].c = (SDL_Rect) { 0,0, 0,0 };
+									fileira_moedas4[i].comido = true;
 								}
 							}
 							
@@ -394,6 +482,13 @@ int main (int argc, char* args[])
 									pink.lifeState = MORTO;
 								}
 							}
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = true;							
+								}
+							}
 						}else{
 							p.r.x -= 5;
 							p.moveState = MOVER_ESQUERDA;
@@ -401,10 +496,11 @@ int main (int argc, char* args[])
 						break;
 					
 				}
+			//ANIMAÇÃO INICIAL
 			} else if(p.state == PARADO){
 					p.c = (SDL_Rect) {0, 0, 20, 20}; 	
 			}
-			
+			//ANIMAÇÃO AO MORRER
 			if(p.state == MORRENDO){
 				switch(isup){
 					case 1:
@@ -443,7 +539,6 @@ int main (int argc, char* args[])
 				}
 				isup++;
 				if(isup > 11){
-					
 					p.state = PARADO;
 					p.lifeState = ALIVE;
 					isup = 1;
@@ -547,18 +642,51 @@ int main (int argc, char* args[])
 			
 			SDL_RenderCopy(ren, sprite, &p.c, &p.r); //player			
 			
-			/*for(i=3;i<15;i++){ //moedas
-				if(moedas[i].comido == false)
-					SDL_RenderCopy(ren, sprite, &moedas[i].c, &moedas[i].r);
-					
-			}*/
+			//MOEDAS
+			for(i=3;i<13;i++){
+				if(!(fileira_moedas1[i].comido)){
+					SDL_RenderCopy(ren, sprite, &fileira_moedas1[i].c, &fileira_moedas1[i].r);
+				}
+				if(!(fileira_moedas2[i].comido)){
+					SDL_RenderCopy(ren, sprite, &fileira_moedas2[i].c, &fileira_moedas2[i].r);
+				}
+				if(!(fileira_moedas3[i].comido)){
+					SDL_RenderCopy(ren, sprite, &fileira_moedas3[i].c, &fileira_moedas3[i].r);
+				}
+				if(!(fileira_moedas4[i].comido)){
+					SDL_RenderCopy(ren, sprite, &fileira_moedas4[i].c, &fileira_moedas4[i].r);
+				}
+			}
+			for(i=3;i<13;i++){
+				if(fileira_moedas1[i].comido && !fileira_moedas1[i].contado){
+					fileira_moedas1[i].contado = true;
+					totalComidos++;
+				}
+				if(fileira_moedas2[i].comido && !fileira_moedas2[i].contado){
+					fileira_moedas2[i].contado = true;
+					totalComidos++;
+				}
+				if(fileira_moedas3[i].comido && !fileira_moedas3[i].contado){
+					fileira_moedas3[i].contado = true;
+					totalComidos++;
+				}
+				if(fileira_moedas4[i].comido && !fileira_moedas4[i].contado){
+					fileira_moedas4[i].contado = true;
+					totalComidos++;
+				}
+			}
+			if(totalComidos == 40){
+				continua = false;
+			}
 			
-			for(i=3;i<15;i++){
-				if(!(&moedas->comido)){
-					SDL_RenderCopy(ren, sprite, &moedas[i].c, &moedas[i].r);
+			//FRUTAS
+			for(i=0;i<4;i++){
+				if(frutas[i].aparece){
+					SDL_RenderCopy(ren, sprite, &frutas[i].c, &frutas[i].r);
 				}
 			}
 				
+			
 			for (i=0; i<8; i++) //walls
 				SDL_RenderFillRect(ren, &walls[i]);
 
@@ -566,19 +694,20 @@ int main (int argc, char* args[])
 			started=true;
 			espera = 150;
 			
-		}
-	}
-
-
-    /* FINALIZACAO */
-    SDL_DestroyRenderer(ren);
-    SDL_DestroyWindow(win);
-    SDL_Quit();
-}
-
-			started=true;
-			espera = 150;
+			conta_tempo1 += espera;
 			
+			//printf("%d\n", conta_tempo);
+			if(conta_tempo1 > 15000){
+				//printf("entrou aqui\n");
+				fruta_aleatoria = random()%4;
+				frutas[fruta_aleatoria].aparece = true;
+				conta_tempo1 = 0;
+			}
+			conta_tempo2 += espera;
+			if(conta_tempo2 > 20000){
+				frutas[fruta_aleatoria].aparece = false;
+				conta_tempo2 = 0;
+			}
 		}
 	}
 
@@ -588,4 +717,3 @@ int main (int argc, char* args[])
     SDL_DestroyWindow(win);
     SDL_Quit();
 }
-
