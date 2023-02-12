@@ -7,8 +7,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <SDL2/SDL_ttf.h>
-
-
 enum Player{PARADO=0, MOVENDO, MORRENDO};
 enum Player_Power{COM_PODER=0, SEM_PODER};
 
@@ -17,8 +15,6 @@ enum Ghost_Vulnerability{VULNERAVEL=0, NAO_VULNERAVEL, MORTO};
 
 enum Direction{MOVER_ESQUERDA=0, MOVER_DIREITA, MOVER_CIMA, MOVER_BAIXO};
 enum Vida {ALIVE=0, DEAD};
-
-
 
 struct dadosPlayer{
 	SDL_Rect r;
@@ -39,13 +35,19 @@ struct dadosGhost{
 	int directionState;
 };
 
-
 struct Coin{
 	SDL_Rect r;
 	SDL_Rect c;
 	bool comido;
 	bool contado;
 };
+
+struct Fruta{
+	SDL_Rect r;
+	SDL_Rect c;
+	bool aparece;
+};
+
 
 int AUX_WaitEventTimeoutCount (SDL_Event* evt, Uint32* ms){
 	Uint32 antes = SDL_GetTicks();
@@ -87,9 +89,14 @@ bool Contato_Coin (SDL_Rect * r1, SDL_Rect * r2){
 	if(SDL_HasIntersection(r1, r2)){
 		return true;
 	} return false;
-
 }
 
+bool Contato_Fruta (SDL_Rect * r1, SDL_Rect * r2){
+	if(SDL_HasIntersection(r1, r2)){
+		return true;
+	} return false;
+
+}
 
 void mudaCor(SDL_Renderer* ren,SDL_Surface* listaS[],SDL_Texture* listaT[],SDL_Color cor,int i,char nome[],TTF_Font *ourFont){
 	listaS[i] = TTF_RenderText_Solid(ourFont, nome,cor);  
@@ -199,7 +206,7 @@ bool IniciaMenu(SDL_Window* win, SDL_Renderer* ren){
 
 void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Texture* maze){
 	/* EXECUÇÃO */
-	bool continua = true;
+		bool continua = true;
 	SDL_Event evt;
 	int isup = 1, movimento;
 	int x =0, y=20;
@@ -207,6 +214,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 	int i=0, boca=0, j;
 	int posicao_x = 1;
 	int posicao_y = 1;
+	int conta_tempo1 = 0, conta_tempo2=0, conta_tempo3=0, fruta_aleatoria;
 
 	struct dadosPlayer p;
 	p.r = (SDL_Rect) {150,200,30,30};
@@ -214,7 +222,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 	p.lifeState = ALIVE;
 	p.powerState = SEM_PODER;
 	p.vidas = 4;
-	
+
 	int xR, yR;
 	int xP, yP;
 	int yC=-10, wC=20, hC=20;
@@ -226,6 +234,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 	int posX_pink=400, posY_pink=350; //posição pink ghost
 	int count = 0;
 	int totalComidos = 0;
+	
 	
 	struct Coin * fileira_moedas1 = (struct Coin *) malloc(sizeof(struct Coin)*13);
 	struct Coin * fileira_moedas2 = (struct Coin *) malloc(sizeof(struct Coin)*13);
@@ -254,25 +263,35 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 		fileira_moedas4[i].r = (SDL_Rect) {430, 30*i, 10, 10};
 		fileira_moedas4[i].c = (SDL_Rect) { 5,185, 10,10 };
 		fileira_moedas4[i].contado = false;
-		if(!started) fileira_moedas4[i].comido = false;
+		if(!started) fileira_moedas4[i].comido = false;	
 	}
+	
+	//frutas
+	struct Fruta * frutas = (struct Fruta *) malloc(sizeof(struct Fruta)*4);
+	frutas[0].c = (SDL_Rect) {165,158,25,25}; frutas[0].r = (SDL_Rect) {150,100,38,38}; frutas[0].aparece = false;
+	frutas[1].c = (SDL_Rect) {165,180,25,25}; frutas[1].r = (SDL_Rect) {300,250,38,38}; frutas[1].aparece = false;
+	frutas[2].c = (SDL_Rect) {165,200,25,25}; frutas[2].r = (SDL_Rect) {450,300,38,38}; frutas[2].aparece = false;
+	frutas[3].c = (SDL_Rect) {165,220,25,25}; frutas[3].r = (SDL_Rect) {100,300,38,38}; frutas[3].aparece = false;
+	
+	//FANTASMAS
+	struct dadosGhost red;
+	red.lifeState = ALIVE;
+	red.vulnerabilityState = NAO_VULNERAVEL;	
+	red.directionState = MOVER_CIMA;
+	red.state = MOVING;
+	
+	struct dadosGhost pink;
+	pink.lifeState = ALIVE;
+	pink.vulnerabilityState = NAO_VULNERAVEL;
+	pink.directionState = MOVER_BAIXO;
+	pink.state = MOVING;
+	
 	while (continua) {
 		SDL_SetRenderDrawColor(ren, 0,0,0,0);
    		SDL_RenderClear(ren);
    		
-   		struct dadosGhost red;
-   		red.r = (SDL_Rect) {posX_red,posY_red, 30,30};
-   		red.lifeState = ALIVE;
-   		
-		struct dadosGhost pink;
+		red.r = (SDL_Rect) {posX_red,posY_red, 30,30};
 		pink.r = (SDL_Rect) { posX_pink,posY_pink, 30,30 };
-		pink.lifeState = ALIVE;
-		
-		if(!started){
-   			red.state = MOVER_CIMA;
-   			pink.state = MOVER_CIMA;
-   		}
-
 
 		SDL_SetRenderDrawColor(ren, 0,0,250,0);
 		SDL_Rect * walls = (SDL_Rect *) malloc(sizeof(SDL_Rect)*8);
@@ -339,6 +358,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							if(boca > 11){
 								boca=0;
 							}
+							//CONTATO COM MOEDAS
 							for(i=3;i<13;i++){
 								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
 									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
@@ -358,16 +378,32 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 								}
 							}
 							
-							
+							//CONTATO COM FANTASMAS
 							if(Contato_Ghost(&p.r, &red.r) || Contato_Ghost(&p.r, &pink.r)){
 								if(p.powerState == SEM_PODER){
 									p.lifeState = DEAD;
 									p.state = MORRENDO;
 									red.state = COLIDIDO;
 									pink.state = COLIDIDO;
-								}else if(p.powerState == COM_PODER){
-									red.lifeState = MORTO;
-									pink.lifeState = MORTO;
+								}else {
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &red.r)){
+										red.lifeState = DEAD;
+										posX_red=0, posY_red=0; 
+									}
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &pink.r)){
+										pink.lifeState = DEAD;
+										posX_pink=0, posY_pink=0;
+									}
+								}
+							}
+							
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = COM_PODER;	
+									red.vulnerabilityState = VULNERAVEL;
+									pink.vulnerabilityState = VULNERAVEL;						
 								}
 							}
 						}else{
@@ -375,6 +411,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							p.moveState = MOVER_BAIXO;
 						}
 						break;
+						
 					case MOVER_BAIXO: //para baixo
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
@@ -388,7 +425,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							if(boca > 11){
 								boca=0;
 							}
-							
+							//CONTATO COM MOEDAS
 							for(i=3;i<13;i++){
 								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
 									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
@@ -407,16 +444,31 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 									fileira_moedas4[i].comido = true;
 								}
 							}
-							
+							//CONTADO COM FANSTASMAS
 							if(Contato_Ghost(&p.r, &red.r) || Contato_Ghost(&p.r, &pink.r)){
 								if(p.powerState == SEM_PODER){
 									p.lifeState = MORTO;
 									p.state = MORRENDO;
 									red.state = COLIDIDO;
 									pink.state = COLIDIDO;
-								}else if(p.powerState == COM_PODER){
-									red.lifeState = MORTO;
-									pink.lifeState = MORTO;
+								}else {
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &red.r)){
+										red.lifeState = DEAD;
+										posX_red=0, posY_red=0; 
+									}
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &pink.r)){
+										pink.lifeState = DEAD;
+										posX_pink=0, posY_pink=0;
+									}
+								}
+							}
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = COM_PODER;
+									red.vulnerabilityState = VULNERAVEL;
+									pink.vulnerabilityState = VULNERAVEL;							
 								}
 							}
 						}else{
@@ -424,6 +476,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							p.moveState = MOVER_CIMA;
 						}
 						break;
+						
 					case MOVER_ESQUERDA: //para esquerda
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
@@ -437,7 +490,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							if(boca > 11){
 								boca=0;
 							}
-							
+							//CONTATO COM MOEDAS
 							for(i=3;i<13;i++){
 								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
 									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
@@ -456,17 +509,31 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 									fileira_moedas4[i].comido = true;
 								}
 							}
-							
+							//CONTADO COM FANSTAMAS
 							if(Contato_Ghost(&p.r, &red.r) || Contato_Ghost(&p.r, &pink.r)){
 								if(p.powerState == SEM_PODER){
 									p.lifeState = MORTO;
 									p.state = MORRENDO;
 									red.state = COLIDIDO;
 									pink.state = COLIDIDO;
-								}else if(p.powerState == COM_PODER){
-									red.lifeState = MORTO;
-									pink.lifeState = MORTO;
-
+								}else {
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &red.r)){
+										red.lifeState = DEAD;
+										posX_red=0, posY_red=0; 
+									}
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &pink.r)){
+										pink.lifeState = DEAD;
+										posX_pink=0, posY_pink=0;
+									}
+								}
+							}
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = COM_PODER;
+									red.vulnerabilityState = VULNERAVEL;
+									pink.vulnerabilityState = VULNERAVEL;								
 								}
 							}
 						}else{
@@ -474,6 +541,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							p.moveState = MOVER_DIREITA;
 						}
 						break;
+						
 					case MOVER_DIREITA: //para direita
 						if(!Tem_Contato(&p.r, walls) && p.lifeState == ALIVE){
 							p.c = (SDL_Rect) {x, y, 20, 20}; 
@@ -487,7 +555,7 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 							if(boca > 11){
 								boca=0;
 							}
-							
+							//CONTATO COM MOEDAS
 							for(i=3;i<13;i++){
 								if(Contato_Coin(&p.r, &fileira_moedas1[i].r)){
 									fileira_moedas1[i].c = (SDL_Rect) { 0,0, 0,0 };
@@ -506,16 +574,32 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 									fileira_moedas4[i].comido = true;
 								}
 							}
-							
+							//CONTATO COM FANTASMAS
 							if(Contato_Ghost(&p.r, &red.r) || Contato_Ghost(&p.r, &pink.r)){
 								if(p.powerState == SEM_PODER){
 									p.lifeState = MORTO;
 									p.state = MORRENDO;
 									red.state = COLIDIDO;
 									pink.state = COLIDIDO;
-								}else if(p.powerState == COM_PODER){
-									red.lifeState = MORTO;
-									pink.lifeState = MORTO;
+								}else {
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &red.r)){
+										red.lifeState = DEAD;
+										posX_red=0, posY_red=0; 
+
+									}
+									if(p.powerState == COM_PODER && Contato_Ghost(&p.r, &pink.r)){
+										pink.lifeState = DEAD;
+										posX_pink=0, posY_pink=0; 
+									}
+								}
+							}
+							//CONTATO COM FRUTAS
+							for(i=0;i<4;i++){
+								if(Contato_Fruta(&p.r, &frutas[i].r) && frutas[i].aparece){
+									frutas[i].r = (SDL_Rect) {0,0,0,0};
+									p.powerState = COM_PODER;
+									red.vulnerabilityState = VULNERAVEL;
+									pink.vulnerabilityState = VULNERAVEL;								
 								}
 							}
 						}else{
@@ -525,10 +609,11 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 						break;
 					
 				}
+			//ANIMAÇÃO INICIAL
 			} else if(p.state == PARADO){
 					p.c = (SDL_Rect) {0, 0, 20, 20}; 	
 			}
-			
+			//ANIMAÇÃO AO MORRER
 			if(p.state == MORRENDO){
 				switch(isup){
 					case 1:
@@ -567,111 +652,164 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 				}
 				isup++;
 				if(isup > 11){
-					
 					p.state = PARADO;
 					p.lifeState = ALIVE;
 					isup = 1;
 					p.r.x = 150;
 					p.r.y = 200;
-					red.state = MOVER_CIMA;
-					pink.state = MOVER_BAIXO;
+					red.state = MOVING;
+					pink.state = MOVING;
+					red.directionState = MOVER_CIMA;
+					pink.directionState = MOVER_BAIXO;
 					p.vidas -= 1;
 					if(p.vidas == 0) continua = false;
 				}
 			}
 			
-			//ESTADOS RED GHOST
-			switch(red.state){
+			
+			//ANIMAÇÃO RED GHOST
+			switch(red.directionState){
 				//vermelho_cima
-				case MOVER_CIMA:
+				case MOVER_CIMA:				
 					posY_red -= 5;
 					frame_red += 1;
-					if(frame_red == 1){
-						xR = 4; yR = 85;
-					}else{
-						xR = 24; yR = 85;
-						frame_red=0;
+					if(red.vulnerabilityState == VULNERAVEL){
+						if(frame_red == 1){
+							xR = 4; yR = 162;
+						}
+						if(frame_red == 2){
+							xR = 24; yR = 162;
+						}
+						if(frame_red == 3){
+							xR = 44; yR = 162;
+						}
+						if(frame_red == 3){
+							xR = 64; yR = 162;
+							frame_red = 0;
+						}
+					} else{
+						if(frame_red == 1){
+							xR = 4; yR = 85;
+						}else{
+							xR = 24; yR = 85;
+							frame_red=0;
+						}
 					}
 					red.c = (SDL_Rect) { xR, yR, wC,hC };
-				break;
-			
-				//vemelho_baixo
-				case MOVER_BAIXO:
-					posY_red += 5;
-					frame_red += 1;
+					break;					
+			//vemelho_baixo
+			case MOVER_BAIXO:
+				posY_red += 5;
+				frame_red += 1;
+				if(red.vulnerabilityState == VULNERAVEL){
+					if(frame_red == 1){
+						xR = 4; yR = 162;
+					}
+					if(frame_red == 2){
+						xR = 24; yR = 162;
+					}
+					if(frame_red == 3){
+						xR = 44; yR = 162;
+					}
+					if(frame_red == 3){
+						xR = 64; yR = 162;
+						frame_red = 0;
+					}
+				}else{
 					if(frame_red == 1){
 						xR = 44; yR = 85;
 					}else{
 						xR = 64; yR = 85;
 						frame_red=0;
 					}
-					red.c = (SDL_Rect) { xR, yR, wC,hC };
-				break;
 				}
+				red.c = (SDL_Rect) { xR, yR, wC,hC };
+				break;
+			}
 		
-			//ESTADOS PINK GHOST
-			switch(pink.state){
+			//ANIMAÇÃO PINK GHOST
+			switch(pink.directionState){
 				//rosa_cima
 				case MOVER_CIMA: 
 					frame_pink += 1;
 					posY_pink -= 5;
-					if(frame_pink == 1){
-						xP = 4; yP = 105;
+					if(pink.vulnerabilityState == VULNERAVEL){
+						if(frame_pink == 1){
+							xP = 4; yP = 162;
+						}
+						if(frame_pink == 2){
+							xP = 24; yP = 162;
+						}
+						if(frame_pink == 3){
+							xP = 44; yP = 162;
+						}
+						if(frame_pink == 3){
+							xP = 64; yP = 162;
+							frame_pink = 0;
+						}
 					}else{
-						xP = 24; yP = 105;
-						frame_pink =0;
+						if(frame_pink == 1){
+							xP = 4; yP = 105;
+						}else{
+							xP = 24; yP = 105;
+							frame_pink =0;
+						}
 					}
 					pink.c = (SDL_Rect) { xP,yP, wC,hC };
-				break;
+					break;
 			
 				//rosa_baixo
 				case MOVER_BAIXO:
 					posY_pink += 5;
 					frame_pink += 1;
-					if(frame_pink == 1){
-						xP = 44; yP = 105;
+					if(pink.vulnerabilityState == VULNERAVEL){
+						if(frame_pink == 1){
+							xP = 4; yP = 162;
+						}
+						if(frame_pink == 2){
+							xP = 24; yP = 162;
+						}
+						if(frame_pink == 3){
+							xP = 44; yP = 162;
+						}
+						if(frame_pink == 3){
+							xP = 64; yP = 162;
+							frame_pink = 0;
+						}
 					}else{
-						xP = 64; yP = 105;
-						frame_pink=0;
+						if(frame_pink == 1){
+							xP = 44; yP = 105;
+						}else{
+							xP = 64; yP = 105;
+							frame_pink=0;
+						}
 					}
 					pink.c = (SDL_Rect) { xP,yP, wC,hC };
 				break;
-		}
+				
+			}
 
 			//MOVIMENTAÇÃO VERTICAL RED GHOST
-			if(posY_red <= 365 && posY_red >= 50 && !alcancou_topo && red.state != COLIDIDO){
-				red.state = MOVER_CIMA;
-				if(posY_red == 50)
-					alcancou_topo = true;
-			}else if(alcancou_topo){
-				red.state = MOVER_BAIXO;
-				if(posY_red >= 350){
-					alcancou_topo = false;
-					}
+			if(red.state != COLIDIDO){
+				if(posY_red <= -20) posY_red = 520;
+			}else{
+				red.directionState = PARADO;
 			}
+			
 			
 			//MOVIMENTAÇÃO VERTICAL PINK GHOST
-			if(posY_pink >= 40 && posY_pink <= 350 && !alcancou_fundo && pink.state != COLIDIDO){
-				pink.state = MOVER_BAIXO;
-				if(posY_pink == 350){
-					alcancou_fundo = true;
-
-				}
-			}else if(alcancou_fundo){
-				pink.state = MOVER_CIMA;
-				if(posY_pink <= 50){
-					alcancou_fundo = false;
-				}
+			if(pink.state != COLIDIDO){
+				if(posY_pink > 500) posY_pink = -10;
+			}else{
+				pink.directionState = PARADO;
 			}
 			
-			SDL_RenderCopy(ren, sprite, &red.c, &red.r);
-			SDL_RenderCopy(ren, sprite, &pink.c, &pink.r);
+			if(red.lifeState != DEAD) SDL_RenderCopy(ren, sprite, &red.c, &red.r);
+			if(pink.lifeState != DEAD) SDL_RenderCopy(ren, sprite, &pink.c, &pink.r);
 			SDL_RenderPresent(ren);
-			
-			
 			SDL_RenderCopy(ren, sprite, &p.c, &p.r); //player			
 			
-			
+			//MOEDAS
 			for(i=3;i<13;i++){
 				if(!(fileira_moedas1[i].comido)){
 					SDL_RenderCopy(ren, sprite, &fileira_moedas1[i].c, &fileira_moedas1[i].r);
@@ -689,29 +827,33 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 			for(i=3;i<13;i++){
 				if(fileira_moedas1[i].comido && !fileira_moedas1[i].contado){
 					fileira_moedas1[i].contado = true;
-
 					totalComidos++;
 				}
 				if(fileira_moedas2[i].comido && !fileira_moedas2[i].contado){
 					fileira_moedas2[i].contado = true;
-
 					totalComidos++;
 				}
 				if(fileira_moedas3[i].comido && !fileira_moedas3[i].contado){
 					fileira_moedas3[i].contado = true;
-
 					totalComidos++;
 				}
 				if(fileira_moedas4[i].comido && !fileira_moedas4[i].contado){
 					fileira_moedas4[i].contado = true;
-
 					totalComidos++;
 				}
 			}
 			if(totalComidos == 40){
 				continua = false;
 			}
+			
+			//FRUTAS
+			for(i=0;i<4;i++){
+				if(frutas[i].aparece){
+					SDL_RenderCopy(ren, sprite, &frutas[i].c, &frutas[i].r);
+				}
+			}
 				
+			
 			for (i=0; i<8; i++) //walls
 				SDL_RenderFillRect(ren, &walls[i]);
 
@@ -719,9 +861,33 @@ void IniciaJogo(SDL_Window* win, SDL_Renderer* ren, SDL_Texture* sprite, SDL_Tex
 			started=true;
 			espera = 150;
 			
+			conta_tempo1 += espera;
+			
+			if(conta_tempo1 > 15000){
+				fruta_aleatoria = random()%4;
+				frutas[fruta_aleatoria].aparece = true;
+				conta_tempo1 = 0;
+			}
+			conta_tempo2 += espera;
+			if(conta_tempo2 > 20000){
+				frutas[fruta_aleatoria].aparece = false;
+				conta_tempo2 = 0;
+				
+			}
+			if(p.powerState == COM_PODER) conta_tempo3 += espera;
+
+			if(conta_tempo3 > 6000){
+				p.powerState= SEM_PODER;
+				red.vulnerabilityState = NAO_VULNERAVEL;
+				pink.vulnerabilityState = NAO_VULNERAVEL;
+				conta_tempo3 = 0;
+			}
+			free(walls);
 		}
 	}
-}
+}	
+	
+
 
 int main (int argc, char* args[])
 {
